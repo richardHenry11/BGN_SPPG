@@ -249,9 +249,14 @@ class _MarketplacePageState extends State<MarketplacePage> {
   Widget build(BuildContext context) {
     final filteredSuppliers = widget.selectedItem == null
         ? <Map<String, dynamic>>[]
-        : _products
-            .where((s) => (widget.selectedItem ?? '').toLowerCase().contains((s['item'] as String).toLowerCase()))
-            .toList();
+        : _products.where((s) {
+            final a = (s['item'] as String).toLowerCase();
+            final b = (widget.selectedItem ?? '').toLowerCase();
+            if (a.contains(b) || b.contains(a)) return true;
+            final aWords = a.split(RegExp(r'\s+'));
+            final bWords = b.split(RegExp(r'\s+'));
+            return aWords.any((w) => w.length > 2 && bWords.contains(w));
+          }).toList();
 
     final searchedSuppliers = _products.where((s) {
       if (_searchQuery.isNotEmpty) {
@@ -430,7 +435,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: _isSelectMode ? 310 : 250,
+                height: _isSelectMode ? 330 : 260,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -441,7 +446,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                     return GestureDetector(
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailProductPage(supplier: s))),
                       child: SizedBox(
-                        width: 200, height: _isSelectMode ? 310 : 250,
+                        width: 200, height: _isSelectMode ? 330 : 260,
                         child: Container(
                           decoration: BoxDecoration(color: const Color.fromARGB(255, 47, 47, 47), borderRadius: BorderRadius.circular(12)),
                           child: Column(

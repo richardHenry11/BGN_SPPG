@@ -29,6 +29,7 @@ class _TrackingPageState extends State<TrackingPage> {
   List<Offset> _currentStroke = [];
   bool _isDrawing = false;
   bool _submitting = false;
+  String _qcStatus = 'Approved';
 
   @override
   void initState() {
@@ -427,10 +428,9 @@ class _TrackingPageState extends State<TrackingPage> {
             borderRadius: BorderRadius.circular(10),
             child: SizedBox(
               width: double.infinity,
-              height: 180,
               child: Image.file(
                 File(photoPath),
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Container(
                   color: const Color.fromARGB(255, 30, 30, 30),
                   child: const Column(
@@ -491,10 +491,9 @@ class _TrackingPageState extends State<TrackingPage> {
             borderRadius: BorderRadius.circular(10),
             child: SizedBox(
               width: double.infinity,
-              height: 180,
               child: Image.network(
                 url,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Container(
                   color: const Color.fromARGB(255, 30, 30, 30),
                   child: const Column(
@@ -610,6 +609,7 @@ class _TrackingPageState extends State<TrackingPage> {
   }
 
   Widget _buildAcceptButton() {
+    final isLolos = _qcStatus == 'Approved';
     final canAccept = _inspectorNameController.text.trim().isNotEmpty &&
         _qualityGrade.isNotEmpty &&
         int.tryParse(_quantityReceivedController.text.trim()) != null &&
@@ -625,7 +625,9 @@ class _TrackingPageState extends State<TrackingPage> {
           child: Container(
             decoration: BoxDecoration(
               gradient: canAccept
-                  ? const LinearGradient(colors: [Color(0xFF135B92), Color(0xFF1A8FCC)])
+                  ? (isLolos
+                      ? const LinearGradient(colors: [Color(0xFF135B92), Color(0xFF1A8FCC)])
+                      : const LinearGradient(colors: [Color(0xFFC62828), Color(0xFFE53935)]))
                   : const LinearGradient(colors: [Color(0xFF444444), Color(0xFF555555)]),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -637,12 +639,14 @@ class _TrackingPageState extends State<TrackingPage> {
                     ? () async {
                         setState(() => _submitting = true);
                         await _submitOrderStatus();
-                        DraftStore.markReceived(widget.order);
+                        if (isLolos) {
+                          DraftStore.markReceived(widget.order);
+                        }
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Pesanan telah diterima'),
-                            backgroundColor: Color(0xFF1B5E20),
+                          SnackBar(
+                            content: Text(isLolos ? 'Pesanan telah diterima' : 'Pesanan diretur'),
+                            backgroundColor: isLolos ? const Color(0xFF1B5E20) : const Color(0xFFB71C1C),
                           ),
                         );
                         Navigator.pop(context);
@@ -655,8 +659,8 @@ class _TrackingPageState extends State<TrackingPage> {
                           height: 24,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                         )
-                      : const Text(
-                          'Terima Barang',
+                      : Text(
+                          isLolos ? 'Terima Barang' : 'Retur Barang',
                           style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
                         ),
                 ),
@@ -773,11 +777,106 @@ class _TrackingPageState extends State<TrackingPage> {
           ),
           const SizedBox(height: 20),
 
+          _buildQcLabel('Hasil QC'),
+          const SizedBox(height: 8),
+          _buildQcStatusSelector(),
+          const SizedBox(height: 20),
+
           _buildQcLabel('Tanda Tangan Digital'),
           const SizedBox(height: 8),
           _buildSignaturePad(),
         ],
       ),
+    );
+  }
+
+  Widget _buildQcStatusSelector() {
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _qcStatus = 'Approved'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: _qcStatus == 'Approved'
+                    ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
+                    : const Color.fromARGB(255, 30, 30, 30),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _qcStatus == 'Approved'
+                      ? const Color(0xFF4CAF50).withValues(alpha: 0.6)
+                      : const Color.fromARGB(255, 50, 50, 50),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    color: _qcStatus == 'Approved'
+                        ? const Color(0xFF4CAF50)
+                        : const Color.fromARGB(255, 100, 100, 100),
+                    size: 28,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Lolos QC',
+                    style: TextStyle(
+                      color: _qcStatus == 'Approved'
+                          ? const Color(0xFF4CAF50)
+                          : const Color.fromARGB(255, 100, 100, 100),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _qcStatus = 'Rejected'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: _qcStatus == 'Rejected'
+                    ? const Color(0xFFE53935).withValues(alpha: 0.15)
+                    : const Color.fromARGB(255, 30, 30, 30),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _qcStatus == 'Rejected'
+                      ? const Color(0xFFE53935).withValues(alpha: 0.6)
+                      : const Color.fromARGB(255, 50, 50, 50),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.cancel_outlined,
+                    color: _qcStatus == 'Rejected'
+                        ? const Color(0xFFE53935)
+                        : const Color.fromARGB(255, 100, 100, 100),
+                    size: 28,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Gagal QC & Retur',
+                    style: TextStyle(
+                      color: _qcStatus == 'Rejected'
+                          ? const Color(0xFFE53935)
+                          : const Color.fromARGB(255, 100, 100, 100),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -923,7 +1022,7 @@ class _TrackingPageState extends State<TrackingPage> {
       'quality_grade': _qualityGrade,
       'storage_condition': _storageConditionController.text.trim(),
       'notes': _qcNotesController.text.trim(),
-      'status': 'Approved',
+      'status': _qcStatus,
       'photo_url': photoUrl,
     };
 
@@ -940,13 +1039,15 @@ class _TrackingPageState extends State<TrackingPage> {
       );
     } catch (_) {}
 
-    try {
-      await http.post(
-        Uri.parse('https://sppg.cbinstrument.com/api/procurement/orders/$poId/status'),
-        headers: {'Content-Type': 'application/json', ...authHeaders},
-        body: jsonEncode({'status': 'Received'}),
-      );
-    } catch (_) {}
+    if (_qcStatus == 'Approved') {
+      try {
+        await http.post(
+          Uri.parse('https://sppg.cbinstrument.com/api/procurement/orders/$poId/status'),
+          headers: {'Content-Type': 'application/json', ...authHeaders},
+          body: jsonEncode({'status': 'Received'}),
+        );
+      } catch (_) {}
+    }
   }
 
   Widget _qcTextField({

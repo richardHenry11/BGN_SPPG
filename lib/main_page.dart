@@ -17,11 +17,13 @@ class _MainPageState extends State<MainPage> {
   int _dashboardKey = 0;
   String? _selectedItem;
   Map<String, dynamic>? _selectedItemInfo;
+  final _pageCache = <int, Widget>{};
 
   void _onOrderItem(Map<String, dynamic> info) {
     setState(() {
       _selectedItem = info['name'] as String;
       _selectedItemInfo = info;
+      _pageCache.remove(1);
       _selectedIndex = 1;
     });
   }
@@ -31,30 +33,38 @@ class _MainPageState extends State<MainPage> {
       _selectedItem = null;
       _selectedItemInfo = null;
       _dashboardKey++;
+      _pageCache.remove(0);
       _selectedIndex = 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    _pageCache.putIfAbsent(_selectedIndex, () => _pageForIndex(_selectedIndex));
     return Scaffold(
-      body: HeroMode(enabled: false, child: IndexedStack(
-        index: _selectedIndex,
+      body: HeroMode(enabled: false, child: Stack(
         children: [
-          DashboardPage(key: ValueKey(_dashboardKey), onOrderItem: _onOrderItem),
-          MarketplacePage(
-            selectedItem: _selectedItem,
-            selectedItemInfo: _selectedItemInfo,
-            onSupplierSelected: _onSupplierSelected,
-          ),
-          const SuppliersPage(),
-          const InventoryPage(),
-          const ProfileSppgPage(),
+          for (final entry in _pageCache.entries)
+            Offstage(
+              offstage: entry.key != _selectedIndex,
+              child: RepaintBoundary(child: entry.value),
+            ),
         ],
       ),
       ),
       bottomNavigationBar: _buildModernNav(),
     );
+  }
+
+  Widget _pageForIndex(int index) {
+    switch (index) {
+      case 0: return DashboardPage(key: ValueKey(_dashboardKey), onOrderItem: _onOrderItem);
+      case 1: return MarketplacePage(selectedItem: _selectedItem, selectedItemInfo: _selectedItemInfo, onSupplierSelected: _onSupplierSelected);
+      case 2: return const SuppliersPage();
+      case 3: return const InventoryPage();
+      case 4: return const ProfileSppgPage();
+      default: return const SizedBox.shrink();
+    }
   }
 
   Widget _buildModernNav() {

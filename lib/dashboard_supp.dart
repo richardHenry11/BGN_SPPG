@@ -1,16 +1,27 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:image/image.dart' as img;
+import 'package:image_picker/image_picker.dart';
 import 'chat_inbox_page.dart';
 import 'distribusi/providers/auth_provider.dart';
 import 'draft_store.dart';
 import 'inspection.dart';
 import 'login.dart';
 import 'marketplace.dart';
+import 'order_supplier.dart';
 import 'prepare_order_page.dart';
 import 'supplier_products_page.dart';
+import 'profile_supplier.dart';
+import 'services/procurement_api.dart';
 
 class DashboardSuppPage extends StatefulWidget {
   const DashboardSuppPage({super.key});
@@ -22,7 +33,8 @@ class DashboardSuppPage extends StatefulWidget {
 class _DashboardSuppPageState extends State<DashboardSuppPage> {
   int _newOrders = 0;
   List<Map<String, dynamic>> _apiOrders = [];
-  List<Map<String, dynamic>> get _approvedOrders => _apiOrders.where((o) => (o['status'] as String?) == 'Approved').toList();
+  List<Map<String, dynamic>> _supplierProducts = [];
+  List<Map<String, dynamic>> get _approvedOrders => _apiOrders.where((o) => (o['status'] as String?) == 'Approved' && (o['payment_status'] as String?) == 'Paid').toList();
   List<Map<String, dynamic>> get _shippedOrders => _apiOrders.where((o) => (o['status'] as String?) == 'Shipped').toList();
 
   @override
@@ -31,6 +43,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
     DraftStore.incomingNotifier.addListener(_refresh);
     _refresh();
     _fetchOrders();
+    _fetchSupplierProducts();
   }
 
   @override
@@ -57,13 +70,280 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
       );
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body) as List<dynamic>;
-        _apiOrders = data.cast<Map<String, dynamic>>();
+        final sId = auth.supplierId;
+        _apiOrders = data
+            .cast<Map<String, dynamic>>()
+            .where((o) => o['supplier_id'].toString() == sId)
+            .toList();
       }
     } catch (_) {}
     if (mounted) setState(() {});
   }
 
-  int get _notifCount => _newOrders;
+  Future<void> _fetchSupplierProducts() async {
+    try {
+      final auth = context.read<AuthProvider>();
+      final res = await http.get(
+        Uri.parse('https://sppg.cbinstrument.com/api/procurement/supplier-products'),
+        headers: {
+          'x-user-Sppg-id': auth.sppgId ?? '',
+          'x-user-Role': auth.currentRole,
+        },
+      );
+      if (res.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(res.body) as List<dynamic>;
+        final sId = auth.supplierId;
+        _supplierProducts = data
+            .cast<Map<String, dynamic>>()
+            .where((p) => p['supplier_id'].toString() == sId)
+            .toList();
+      }
+    } catch (_) {}
+    if (mounted) setState(() {});
+  }
+
+  Future<Position> _getLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('GPS tidak aktif. Aktifkan lokasi di pengaturan.');
+    }
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Izin lokasi ditolak.');
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Izin lokasi diblokir permanen. Buka pengaturan aplikasi.');
+    }
+    return await Geolocator.getCurrentPosition(
+      locationSettings: LocationSettings(
+        accuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      ),
+    );
+  }
+
+  Future<String> _getAlamat(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isEmpty) return 'Alamat tidak ditemukan';
+      final p = placemarks.first;
+      final parts = [
+        if (p.street != null && p.street!.isNotEmpty) p.street,
+        if (p.subLocality != null && p.subLocality!.isNotEmpty) p.subLocality,
+        if (p.locality != null && p.locality!.isNotEmpty) p.locality,
+        if (p.subAdministrativeArea != null && p.subAdministrativeArea!.isNotEmpty) p.subAdministrativeArea,
+        if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) p.administrativeArea,
+      ];
+      return parts.take(3).join(', ');
+    } catch (_) {
+      return '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
+    }
+  }
+
+  String _formatKoordinat(double lat, double lng) {
+    final latDir = lat >= 0 ? 'N' : 'S';
+    final lngDir = lng >= 0 ? 'E' : 'W';
+    return '${lat.abs().toStringAsFixed(5)}° $latDir, ${lng.abs().toStringAsFixed(5)}° $lngDir';
+  }
+
+  Future<String> _addWatermark({
+    required String imagePath,
+    required String date,
+    required String time,
+    required double latitude,
+    required double longitude,
+    required String address,
+    required String supplier,
+  }) async {
+    final file = File(imagePath);
+    final bytes = await file.readAsBytes();
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final original = frame.image;
+    final w = original.width;
+    final h = original.height;
+    final s = w / 1920;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()));
+
+    canvas.drawImage(original, Offset.zero, Paint());
+
+    final barH = 280.0 * s.clamp(0.5, 2.0);
+    final barPaint = Paint()..color = const Color.fromARGB(180, 0, 0, 0);
+    canvas.drawRect(Rect.fromLTWH(0, h - barH, w.toDouble(), barH), barPaint);
+
+    final fSize = 48.0 * s.clamp(0.5, 2.0);
+    final padX = 18.0 * s.clamp(0.5, 2.0);
+    final padY = 14.0 * s.clamp(0.5, 2.0);
+    double y = h - barH + padY;
+
+    void drawLine(String text, {double? size, bool mono = false}) {
+      final tp = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: size ?? fSize,
+            fontWeight: FontWeight.w500,
+            fontFamily: mono ? 'monospace' : null,
+          ),
+        ),
+        textDirection: ui.TextDirection.ltr,
+      );
+      tp.layout(maxWidth: w * 0.7);
+      tp.paint(canvas, Offset(padX, y));
+      y += tp.height + 4;
+    }
+
+    drawLine('$date  $time');
+    drawLine(_formatKoordinat(latitude, longitude), size: fSize * 0.85, mono: true);
+    drawLine(address, size: fSize * 0.85);
+    drawLine('Supplier: $supplier', size: fSize * 0.85);
+
+    final badgeTp = TextPainter(
+      text: const TextSpan(
+        text: 'BGN',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
+      ),
+      textDirection: ui.TextDirection.ltr,
+    );
+    badgeTp.layout();
+    badgeTp.paint(canvas, Offset(w - badgeTp.width - padX, h - barH + padY));
+
+    final picture = recorder.endRecording();
+    final watermarked = await picture.toImage(w, h);
+    final rawPixels = await watermarked.toByteData(format: ui.ImageByteFormat.rawStraightRgba);
+    if (rawPixels == null) throw Exception('Gagal encode foto watermark');
+    final img.Image decoded = img.Image.fromBytes(
+      width: w,
+      height: h,
+      bytes: rawPixels.buffer,
+      numChannels: 4,
+    );
+    final jpegBytes = img.encodeJpg(decoded, quality: 85);
+    final outPath = imagePath.replaceFirst(RegExp(r'\.\w+$'), '_watermarked.jpg');
+    await File(outPath).writeAsBytes(jpegBytes);
+    try { await file.delete(); } catch (_) {}
+
+    return outPath;
+  }
+
+  Future<void> _markAsReceived(Map<String, dynamic> order) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: const Color.fromARGB(255, 47, 47, 47),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _sourceButton(Icons.camera_alt, 'Kamera', ImageSource.camera),
+            _sourceButton(Icons.photo_library, 'Galeri', ImageSource.gallery),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: source,
+      imageQuality: 70,
+      maxWidth: 1920,
+    );
+    if (picked == null) return;
+
+    try {
+      await initializeDateFormatting('id_ID');
+      final position = await _getLocation();
+      final alamat = await _getAlamat(position.latitude, position.longitude);
+      final now = DateTime.now();
+      final tanggal = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(now);
+      final jam = DateFormat('HH:mm').format(now);
+      final supplier = order['supplier_name'] as String? ?? 'Supplier';
+      final wmPath = await _addWatermark(
+        imagePath: picked.path,
+        date: tanggal,
+        time: jam,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        address: alamat,
+        supplier: supplier,
+      );
+
+      final auth = context.read<AuthProvider>();
+      final photoUrl = await ProcurementApi.uploadPhoto(wmPath, sppgId: auth.sppgId, role: auth.currentRole);
+
+      final poId = order['id'];
+      final res = await http.post(
+        Uri.parse('https://sppg.cbinstrument.com/api/procurement/orders/$poId/supplier-status'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-Sppg-id': auth.sppgId ?? '',
+          'x-user-Role': auth.currentRole,
+        },
+        body: jsonEncode({
+          'supplier_status': 'Diterima',
+          'photo_before_shipping': photoUrl,
+        }),
+      );
+
+      if (!mounted) return;
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Barang telah diterima'), backgroundColor: Color(0xFF4CAF50)),
+        );
+        _fetchOrders();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal (${res.statusCode})'), backgroundColor: Colors.redAccent),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Gagal: ${e.toString().replaceFirst('Exception: ', '')}'),
+          backgroundColor: Colors.redAccent,
+        ));
+      }
+    }
+  }
+
+  Widget _sourceButton(IconData icon, String label, ImageSource source) {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context, source),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A8FCC).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: const Color(0xFF498CC8), size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(color: Colors.white, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  int get _notifCount => _newOrders + _approvedOrders.length;
 
   void _showNotifications() {
     showModalBottomSheet(
@@ -92,10 +372,14 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
             _notifItem(
               Icons.receipt_long,
               'Pesanan Masuk',
-              '$_newOrders pesanan baru',
-              _newOrders,
+              '${_newOrders + _approvedOrders.length} pesanan baru',
+              _newOrders + _approvedOrders.length,
               () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const OrderSupplierPage()),
+                );
               },
             ),
           ],
@@ -245,7 +529,12 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
               builder: (_, __) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Pesanan Masuk'),
+                  _buildSectionTitle('Pesanan Masuk', onLihatSemua: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const OrderSupplierPage()),
+                    )?.then((_) => _fetchOrders());
+                  }),
                   const SizedBox(height: 8),
                   _buildOrderList(),
                 ],
@@ -287,8 +576,8 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
                 colors: [Color(0xFF0A2640), Color(0xFF135B92)],
               ),
             ),
-            accountName: const Text('UD. Sumber Makmur', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            accountEmail: Text(DraftStore.loggedInUser, style: const TextStyle(color: Color.fromARGB(255, 176, 176, 176))),
+            accountName: Text(context.read<AuthProvider>().activeUser.unit, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            accountEmail: Text(context.read<AuthProvider>().activeUser.name, style: const TextStyle(color: Color.fromARGB(255, 176, 176, 176))),
             currentAccountPicture: CircleAvatar(
               backgroundColor: const Color.fromARGB(255, 40, 40, 40),
               child: const Icon(Icons.store, color: Colors.white, size: 32),
@@ -309,7 +598,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const SupplierProductsPage()),
-              );
+              )?.then((_) => _fetchSupplierProducts());
             },
           ),
           ListTile(
@@ -326,12 +615,24 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
           ListTile(
             leading: const Icon(Icons.receipt_long, color: Color(0xFF498CC8)),
             title: const Text('Pesanan', style: TextStyle(color: Colors.white)),
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const OrderSupplierPage()),
+              )?.then((_) => _fetchOrders());
+            },
           ),
           ListTile(
             leading: const Icon(Icons.person_outline, color: Color(0xFF498CC8)),
             title: const Text('Profil', style: TextStyle(color: Colors.white)),
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileSupplierPage()),
+              );
+            },
           ),
           const Spacer(),
           const Divider(color: Color.fromARGB(255, 60, 60, 60)),
@@ -384,22 +685,22 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
                 child: const Icon(Icons.store, color: Colors.white, size: 28),
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'UD. Sumber Makmur',
-                      style: TextStyle(
+                      context.read<AuthProvider>().activeUser.unit,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'Supplier Sayuran & Bahan Pokok',
-                    style: TextStyle(
+                    context.read<AuthProvider>().activeUser.name,
+                    style: const TextStyle(
                       color: Color.fromARGB(255, 176, 176, 176),
                       fontSize: 12,
                     ),
@@ -450,7 +751,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _statItem(Icons.inventory_2, '12', 'Produk'),
+          _statItem(Icons.inventory_2, '${_supplierProducts.length}', 'Produk'),
           _statDivider(),
           _statItem(Icons.receipt_long, '$orderCount', 'Pesanan'),
           _statDivider(),
@@ -493,7 +794,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, {VoidCallback? onLihatSemua}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -508,11 +809,11 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
             ),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: onLihatSemua ?? () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const SupplierProductsPage()),
-              );
+              )?.then((_) => _fetchSupplierProducts());
             },
             child: const Text(
               'Lihat Semua',
@@ -527,13 +828,38 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
     );
   }
 
+  String _formatPrice(dynamic price) {
+    if (price == null) return 'Rp0';
+    final num val = (price is num) ? price : double.tryParse(price.toString()) ?? 0;
+    return 'Rp${val.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  }
+
+  String _stockStatus(dynamic stock) {
+    final s = (stock is num) ? stock.toInt() : int.tryParse(stock.toString()) ?? 0;
+    if (s <= 0) return 'Habis';
+    if (s <= 20) return 'Terbatas';
+    return 'Tersedia';
+  }
+
   Widget _buildProductList() {
-    final products = [
-      {'name': 'Kangkung', 'stock': '45 kg', 'price': 'Rp5.000', 'status': 'Tersedia'},
-      {'name': 'Bayam', 'stock': '30 kg', 'price': 'Rp6.000', 'status': 'Tersedia'},
-      {'name': 'Wortel', 'stock': '20 kg', 'price': 'Rp12.000', 'status': 'Terbatas'},
-      {'name': 'Cabai Merah', 'stock': '0 kg', 'price': 'Rp35.000', 'status': 'Habis'},
-    ];
+    final preview = _supplierProducts.take(3).toList();
+
+    if (preview.isEmpty) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 47, 47, 47),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Center(
+          child: Text(
+            'Belum ada produk',
+            style: TextStyle(color: Color.fromARGB(255, 133, 133, 133), fontSize: 14),
+          ),
+        ),
+      );
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -542,16 +868,22 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        children: List.generate(products.length, (i) {
-          final p = products[i];
-          return _productItem(p['name'] as String, p['stock'] as String, p['price'] as String, p['status'] as String,
-              i < products.length - 1);
+        children: List.generate(preview.length, (i) {
+          final p = preview[i];
+          return _productItem(p, i < preview.length - 1);
         }),
       ),
     );
   }
 
-  Widget _productItem(String name, String stock, String price, String status, bool showBorder) {
+  Widget _productItem(Map<String, dynamic> p, bool showBorder) {
+    final name = p['name'] as String? ?? '';
+    final stock = p['stock'];
+    final unit = p['unit'] as String? ?? '';
+    final price = _formatPrice(p['price']);
+    final status = _stockStatus(stock);
+    final stockLabel = '${stock ?? 0} $unit';
+
     final statusColor = status == 'Tersedia'
         ? const Color(0xFF4CAF50)
         : status == 'Terbatas'
@@ -591,7 +923,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$stock • $price',
+                  '$stockLabel • $price',
                   style: const TextStyle(
                     color: Color.fromARGB(255, 133, 133, 133),
                     fontSize: 12,
@@ -772,7 +1104,23 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
                 );
               }),
             ],
-            if (!isShippedValue) ...[
+            if (isShippedValue) ...[
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                height: 40,
+                child: ElevatedButton.icon(
+                  onPressed: () => _markAsReceived(order),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: const Text('Barang Sampai', style: TextStyle(fontWeight: FontWeight.w600)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+            ] else ...[
               const SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,

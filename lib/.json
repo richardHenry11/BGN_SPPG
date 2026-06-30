@@ -1,36 +1,30 @@
-{
-    "id": 10,
-    "sppg_id": 1,
-    "order_date": "2026-06-25T09:58:58.908312018+07:00",
-    "supplier_id": 3,
-    "supplier_name": "Peternakan Telur Berkah",
-    "items": [
-        {
-            "id": 128,
-            "purchase_order_id": 10,
-            "material_id": 4,
-            "name": "Telur Ayam Negeri",
-            "quantity": 30,
-            "price": 28000
-        }
-    ],
-    "total_amount": 840000,
-    "status": "Pending",
-    "supplier_status": "",
-    "photo_before_shipping": "",
-    "photo_after_received": "",
-    "created_at": "2026-06-25T09:58:58.908312258+07:00",
-    "parent_id": 0,
-    "is_split": false
-},
-
-Pengiriman foto dari aplikasi mobile dilakukan dengan 2 tahap (Two-Step Upload):
-Upload File Mentah (Multipart Form-Data):
-Aplikasi mobile mengunggah file gambar (dari kamera/galeri) ke server.
-Endpoint: POST /api/procurement/{id}/supplier-status
-body:
-{
- "supplier_status": "Dikirim",
- "photo_before_shipping": ""
-}
-Header: Content-Type: multipart/form-data
+[
+    {
+        "id": 22,
+        "sppg_id": 1,
+        "order_date": "2026-06-29T15:31:42.408+07:00",
+        "supplier_id": 5,
+        "supplier_name": "CV. Buah Perkasa",
+        "items": [
+            {
+                "id": 418,
+                "purchase_order_id": 22,
+                "material_id": 74,
+                "name": "Buah Semangka Merah",
+                "quantity": 1.406,
+                "price": 23750
+            }
+        ],
+        "total_amount": 33392.5,
+        "status": "Shipped",
+        "supplier_status": "Dikirim",
+        "photo_before_shipping": "https://sppg.cbinstrument.com/uploads/qc_1782724713911133992.jpg",
+        "photo_after_received": "",
+        "created_at": "2026-06-29T15:31:42.408+07:00",
+        "parent_id": 0,
+        "is_split": false,
+        "production_plan_ids": "",
+        "payment_status": "Paid",
+        "payment_proof_photo": "https://sppg.cbinstrument.com/uploads/qc_1782724669768957727.jpg"
+    }
+]

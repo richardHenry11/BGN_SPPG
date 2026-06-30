@@ -93,6 +93,7 @@ class AuthProvider extends ChangeNotifier {
       _userData?['role'] as String? ?? _currentRole;
 
   String? get sppgId => (_userData?['sppg_id'] ?? _userData?['sppgId'])?.toString();
+  String? get supplierId => (_userData?['supplier_id'])?.toString();
 
   RoleModel get activeRole =>
       roles.firstWhere((r) => r.id == currentRole, orElse: () => roles.first);

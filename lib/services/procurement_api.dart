@@ -86,6 +86,18 @@ class ProcurementApi {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
+  static Future<List<Map<String, dynamic>>> fetchInspections({String? sppgId, String? role}) async {
+    final res = await http.get(
+      Uri.parse('$_baseUrl/inspections'),
+      headers: {'Accept': 'application/json', ..._headers(sppgId: sppgId, role: role)},
+    );
+    if (res.statusCode != 200) {
+      throw Exception('Gagal memuat QC (${res.statusCode})');
+    }
+    final List<dynamic>? data = jsonDecode(res.body) as List<dynamic>?;
+    return data?.cast<Map<String, dynamic>>() ?? [];
+  }
+
   static Future<void> updateSupplierStatus(int orderId, String photoUrl, {String? sppgId, String? role}) async {
     final res = await http.post(
       Uri.parse('$_baseUrl/orders/$orderId/supplier-status'),

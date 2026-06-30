@@ -1,7 +1,13 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:image/image.dart' as img;
 import 'draft_store.dart';
 import 'distribusi/providers/auth_provider.dart';
 import 'services/procurement_api.dart';
@@ -69,6 +75,144 @@ class _PrepareOrderPageState extends State<PrepareOrderPage> {
     return picked?.path;
   }
 
+  // ── GPS ──
+  Future<Position> _getLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('GPS tidak aktif. Aktifkan lokasi di pengaturan.');
+    }
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Izin lokasi ditolak.');
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Izin lokasi diblokir permanen. Buka pengaturan aplikasi.');
+    }
+    return await Geolocator.getCurrentPosition(
+      locationSettings: LocationSettings(
+        accuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      ),
+    );
+  }
+
+  // ── Reverse geocoding ──
+  Future<String> _getAlamat(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isEmpty) return 'Alamat tidak ditemukan';
+      final p = placemarks.first;
+      final parts = [
+        if (p.street != null && p.street!.isNotEmpty) p.street,
+        if (p.subLocality != null && p.subLocality!.isNotEmpty) p.subLocality,
+        if (p.locality != null && p.locality!.isNotEmpty) p.locality,
+        if (p.subAdministrativeArea != null && p.subAdministrativeArea!.isNotEmpty) p.subAdministrativeArea,
+        if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) p.administrativeArea,
+      ];
+      return parts.take(3).join(', ');
+    } catch (_) {
+      return '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
+    }
+  }
+
+  String _formatKoordinat(double lat, double lng) {
+    final latDir = lat >= 0 ? 'N' : 'S';
+    final lngDir = lng >= 0 ? 'E' : 'W';
+    return '${lat.abs().toStringAsFixed(5)}° $latDir, ${lng.abs().toStringAsFixed(5)}° $lngDir';
+  }
+
+  // ── Watermark (burn into image using dart:ui) ──
+  Future<String> _addWatermark({
+    required String imagePath,
+    required String date,
+    required String time,
+    required double latitude,
+    required double longitude,
+    required String address,
+    required String supplier,
+  }) async {
+    final file = File(imagePath);
+    final bytes = await file.readAsBytes();
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final original = frame.image;
+    final w = original.width;
+    final h = original.height;
+    final s = w / 1920;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()));
+
+    canvas.drawImage(original, Offset.zero, Paint());
+
+    final barH = 280.0 * s.clamp(0.5, 2.0);
+    final barPaint = Paint()..color = const Color.fromARGB(180, 0, 0, 0);
+    canvas.drawRect(Rect.fromLTWH(0, h - barH, w.toDouble(), barH), barPaint);
+
+    final fSize = 48.0 * s.clamp(0.5, 2.0);
+    final padX = 18.0 * s.clamp(0.5, 2.0);
+    final padY = 14.0 * s.clamp(0.5, 2.0);
+    double y = h - barH + padY;
+
+    void drawLine(String text, {double? size, bool mono = false}) {
+      final tp = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: size ?? fSize,
+            fontWeight: FontWeight.w500,
+            fontFamily: mono ? 'monospace' : null,
+          ),
+        ),
+        textDirection: ui.TextDirection.ltr,
+      );
+      tp.layout(maxWidth: w * 0.7);
+      tp.paint(canvas, Offset(padX, y));
+      y += tp.height + 4;
+    }
+
+    drawLine('$date  $time');
+    drawLine(_formatKoordinat(latitude, longitude), size: fSize * 0.85, mono: true);
+    drawLine(address, size: fSize * 0.85);
+    drawLine('Supplier: $supplier', size: fSize * 0.85);
+
+    final badgeTp = TextPainter(
+      text: const TextSpan(
+        text: 'BGN',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
+      ),
+      textDirection: ui.TextDirection.ltr,
+    );
+    badgeTp.layout();
+    badgeTp.paint(canvas, Offset(w - badgeTp.width - padX, h - barH + padY));
+
+    final picture = recorder.endRecording();
+    final watermarked = await picture.toImage(w, h);
+    final rawPixels = await watermarked.toByteData(format: ui.ImageByteFormat.rawStraightRgba);
+    if (rawPixels == null) throw Exception('Gagal encode foto watermark');
+    final img.Image decoded = img.Image.fromBytes(
+      width: w,
+      height: h,
+      bytes: rawPixels.buffer,
+      numChannels: 4,
+    );
+    final jpegBytes = img.encodeJpg(decoded, quality: 85);
+    final outPath = imagePath.replaceFirst(RegExp(r'\.\w+$'), '_watermarked.jpg');
+    await File(outPath).writeAsBytes(jpegBytes);
+    try { await file.delete(); } catch (_) {}
+
+    return outPath;
+  }
+
   Future<void> _acceptWithPhoto() async {
     String? photoUrl;
     final confirmed = await showDialog<bool>(
@@ -77,8 +221,35 @@ class _PrepareOrderPageState extends State<PrepareOrderPage> {
       builder: (ctx) => _PhotoDialog(
         onPick: () async {
           final path = await _pickImage();
-          if (path != null) photoUrl = path;
-          return path;
+          if (path == null) return null;
+          try {
+            await initializeDateFormatting('id_ID');
+            final position = await _getLocation();
+            final alamat = await _getAlamat(position.latitude, position.longitude);
+            final now = DateTime.now();
+            final tanggal = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(now);
+            final jam = DateFormat('HH:mm').format(now);
+            final supplier = widget.order['supplier'] as String? ?? 'Supplier';
+            final wmPath = await _addWatermark(
+              imagePath: path,
+              date: tanggal,
+              time: jam,
+              latitude: position.latitude,
+              longitude: position.longitude,
+              address: alamat,
+              supplier: supplier,
+            );
+            photoUrl = wmPath;
+            return wmPath;
+          } catch (e) {
+            if (ctx.mounted) {
+              ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                content: Text('Gagal: ${e.toString().replaceFirst('Exception: ', '')}'),
+                backgroundColor: Colors.red,
+              ));
+            }
+            return null;
+          }
         },
         onConfirm: () => Navigator.pop(ctx, true),
       ),

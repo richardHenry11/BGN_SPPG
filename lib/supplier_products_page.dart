@@ -39,10 +39,11 @@ class _SupplierProductsPageState extends State<SupplierProductsPage> {
       );
       if (res.statusCode == 200) {
         final List<dynamic> data = json.decode(res.body);
+        final sId = auth.supplierId;
         setState(() {
           _products = data
               .map((e) => e as Map<String, dynamic>)
-              .where((p) => p['supplier_id'] == DraftStore.loggedInSupplierId)
+              .where((p) => p['supplier_id'].toString() == sId)
               .toList();
           _loading = false;
         });
@@ -226,6 +227,7 @@ class _SupplierProductsPageState extends State<SupplierProductsPage> {
     final categories = ['Kering', 'Chiller', 'Freezer'];
     String selectedCategory = isEdit ? (product['category'] as String? ?? 'Kering') : 'Kering';
 
+    final auth = context.read<AuthProvider>();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -335,7 +337,7 @@ class _SupplierProductsPageState extends State<SupplierProductsPage> {
                               return;
                             }
                             final body = {
-                              'supplier_id': DraftStore.loggedInSupplierId,
+                              'supplier_id': int.tryParse(auth.supplierId ?? '0') ?? 0,
                               'material_id': int.tryParse(materialCtl.text.trim()) ?? 0,
                               'name': nameCtl.text.trim(),
                               'price': int.tryParse(priceCtl.text.trim()) ?? 0,
