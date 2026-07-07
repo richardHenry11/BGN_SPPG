@@ -37,7 +37,7 @@ class _WeeklyChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: BGNColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: BGNColors.border),
       ),
@@ -123,7 +123,7 @@ class _SuccessRate extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: BGNColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: BGNColors.border),
       ),
@@ -197,7 +197,7 @@ class _FeedbackSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: BGNColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: BGNColors.border),
       ),

@@ -1,6 +1,8 @@
 // lib/providers/pengiriman_provider.dart
 
 import 'package:flutter/material.dart';
+import 'package:bgn/distribusi/services/api_client.dart';
+import 'package:bgn/distribusi/services/packaging_service.dart';
 
 class ValidasiData {
   final int jumlah;
@@ -49,7 +51,13 @@ class PengirimanModel {
 }
 
 class PengirimanProvider extends ChangeNotifier {
-  final List<PengirimanModel> _pengirimanList = [
+  final _service = PackagingService(ApiClient());
+  bool isLoading = false;
+  String? error;
+
+  final List<PengirimanModel> _pengirimanList = [];
+
+  static final List<PengirimanModel> _mockFallback = [
     PengirimanModel(
       id: 1,
       tanggal: '2026-06-07',
@@ -142,8 +150,60 @@ class PengirimanProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _mapStatus(String? apiStatus) {
+    switch (apiStatus?.toLowerCase()) {
+      case 'selesai':
+      case 'received':
+      case 'delivered':
+        return 'selesai';
+      case 'dalam_perjalanan':
+      case 'in_transit':
+      case 'shipped':
+        return 'dalam_perjalanan';
+      case 'packing':
+      case 'dikemas':
+        return 'belum_berangkat';
+      default:
+        return 'belum_berangkat';
+    }
+  }
+
+  PengirimanModel _fromApi(Map<String, dynamic> item) {
+    final ts = item['timestamp'] as String? ?? '';
+    final date = ts.length >= 10 ? ts.substring(0, 10) : '2026-06-29';
+    final time = ts.length >= 16 ? ts.substring(11, 16) : '07:00';
+
+    return PengirimanModel(
+      id: (item['id'] as num?)?.toInt() ?? 0,
+      tanggal: date,
+      waktu: time,
+      alamat: (item['beneficiary_name'] as String?) ?? '-',
+      porsiRencana: (item['target_portions'] as num?)?.toInt() ?? 0,
+      kategori: (item['menu_name'] as String?) ?? 'Makanan',
+      pengantar: (item['field_assistant'] as String?) ?? '-',
+      penerima: '-',
+      status: _mapStatus(item['delivery_status'] as String?),
+    );
+  }
+
   Future<void> refresh() async {
-    await Future.delayed(const Duration(milliseconds: 800));
+    isLoading = true;
+    error = null;
     notifyListeners();
+
+    try {
+      final data = await _service.getList();
+      _pengirimanList
+        ..clear()
+        ..addAll(data.map((e) => _fromApi(e as Map<String, dynamic>)));
+    } catch (e) {
+      error = e.toString();
+      if (_pengirimanList.isEmpty) {
+        _pengirimanList.addAll(_mockFallback);
+      }
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }

@@ -16,32 +16,42 @@ class BGNColors {
   static const Color danger      = Color(0xFFDC2626);
   static const Color dangerLight = Color(0xFFFFEBEE);
 
-  // Neutral
+  // Dark UI
+  static const Color bg          = Color(0xFF0D1117);
+  static const Color surface     = Color(0xFF161B22);
+  static const Color surfaceAlt  = Color(0xFF1C2128);
+  static const Color border      = Color(0xFF30363D);
+
+  // Text on dark
+  static const Color textPrimary = Color(0xFFF0F6FC);
+  static const Color textPrimaryDark = Color(0xFF1C2128);
+  static const Color textSecondary = Color(0xFFC9D1D9);
+  static const Color textHint    = Color(0xFF8B949E);
+
+  // Aliases
   static const Color white       = Color(0xFFFFFFFF);
-  static const Color background  = Color(0xFFF3F4F6);
-  static const Color border      = Color(0xFFE5E7EB);
-  static const Color textPrimary = Color(0xFF111827);
-  static const Color textSecondary = Color(0xFF6B7280);
-  static const Color textHint    = Color(0xFF9CA3AF);
+  static const Color background  = bg;
 }
 
 class BGNTheme {
   static ThemeData get theme => ThemeData(
     useMaterial3: true,
+    brightness: Brightness.dark,
     colorScheme: ColorScheme.fromSeed(
       seedColor: BGNColors.primary,
+      brightness: Brightness.dark,
       primary: BGNColors.primary,
-      background: BGNColors.background,
+      surface: BGNColors.surface,
     ),
-    scaffoldBackgroundColor: BGNColors.background,
+    scaffoldBackgroundColor: BGNColors.bg,
     appBarTheme: const AppBarTheme(
-      backgroundColor: BGNColors.primary,
-      foregroundColor: BGNColors.white,
+      backgroundColor: BGNColors.surface,
+      foregroundColor: BGNColors.textPrimary,
       elevation: 0,
       centerTitle: false,
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: BGNColors.white,
+      backgroundColor: BGNColors.surface,
       selectedItemColor: BGNColors.primary,
       unselectedItemColor: BGNColors.textSecondary,
       type: BottomNavigationBarType.fixed,
@@ -58,7 +68,7 @@ class BGNTheme {
       ),
     ),
     cardTheme: CardThemeData(
-      color: BGNColors.white,
+      color: BGNColors.surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -67,7 +77,7 @@ class BGNTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: BGNColors.white,
+      fillColor: BGNColors.surfaceAlt,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: BGNColors.border),

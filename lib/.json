@@ -1,30 +1,609 @@
+{
+    "menu_name": "Nasi Putih+Telur+Daging",
+    "target_date": "2026-07-06",
+    "target_portions": 2000,
+    "target_portions_large": 1500,
+    "target_portions_small": 500,
+    "status": "Scheduled",
+    "bom": [
+        {
+            "material_id": 1,
+            "material_name": "Beras Premium Cianjur",
+            "standard_weight_per_portion": 50,
+            "total_required_weight": 100
+        },
+        {
+            "material_id": 15,
+            "material_name": "Telur Ayam Negeri",
+            "standard_weight_per_portion": 50,
+            "total_required_weight": 100
+        },
+        {
+            "material_id": 20,
+            "material_name": "Daging Sapi Sirloin",
+            "standard_weight_per_portion": 50,
+            "total_required_weight": 100
+        }
+    ],
+    "calories_large": 0,
+    "protein_large": 0,
+    "fat_large": 0,
+    "carbs_large": 0,
+    "fiber_large": 0,
+    "calories_small": 0,
+    "protein_small": 0,
+    "fat_small": 0,
+    "carbs_small": 0,
+    "fiber_small": 0
+}
+
+{
+    "menu_name": "Nasi Kuning+Ikan Nila",
+    "target_date": "2026-07-06",
+    "target_portions": 1580,
+    "target_portions_large": 1000,
+    "target_portions_small": 580,
+    "status": "Scheduled",
+    "bom": [
+        {
+            "material_id": 1,
+            "material_name": "Beras Premium Cianjur",
+            "standard_weight_per_portion": 50,
+            "total_required_weight": 79
+        },
+        {
+            "material_id": 23,
+            "material_name": "Ikan Nila Segar",
+            "standard_weight_per_portion": 50,
+            "total_required_weight": 79
+        }
+    ],
+    "calories_large": 0,
+    "protein_large": 0,
+    "fat_large": 0,
+    "carbs_large": 0,
+    "fiber_large": 0,
+    "calories_small": 0,
+    "protein_small": 0,
+    "fat_small": 0,
+    "carbs_small": 0,
+    "fiber_small": 0
+}
+
 [
     {
-        "id": 22,
+        "id": 5,
         "sppg_id": 1,
-        "order_date": "2026-06-29T15:31:42.408+07:00",
-        "supplier_id": 5,
-        "supplier_name": "CV. Buah Perkasa",
-        "items": [
-            {
-                "id": 418,
-                "purchase_order_id": 22,
-                "material_id": 74,
-                "name": "Buah Semangka Merah",
-                "quantity": 1.406,
-                "price": 23750
-            }
-        ],
-        "total_amount": 33392.5,
-        "status": "Shipped",
-        "supplier_status": "Dikirim",
-        "photo_before_shipping": "https://sppg.cbinstrument.com/uploads/qc_1782724713911133992.jpg",
-        "photo_after_received": "",
-        "created_at": "2026-06-29T15:31:42.408+07:00",
-        "parent_id": 0,
-        "is_split": false,
-        "production_plan_ids": "",
-        "payment_status": "Paid",
-        "payment_proof_photo": "https://sppg.cbinstrument.com/uploads/qc_1782724669768957727.jpg"
+        "menu_name": "[Porsi Besar & Kecil] Nasi Putih + Daging Sapi Semur Legit + Cah Sayur Daun Singkong + Buah Semangka Merah",
+        "target_date": "2026-07-06",
+        "target_portions": 1580,
+        "target_portions_large": 1000,
+        "target_portions_small": 580,
+        "status": "Scheduled",
+        "created_at": "2026-07-01T08:34:09.423+07:00",
+        "calories_large": 572.6,
+        "protein_large": 28.4,
+        "fat_large": 12.6,
+        "carbs_large": 82.5,
+        "fiber_large": 0,
+        "calories_small": 421.9,
+        "protein_small": 20.9,
+        "fat_small": 9.3,
+        "carbs_small": 60.8,
+        "fiber_small": 0
     }
 ]
+
+{
+    "menu_name": "[Kecil]Nasi Putih + Telur",
+    "target_date": "2026-07-06",
+    "target_portions": 500,
+    "target_portions_large": 250,
+    "target_portions_small": 250,
+    "status": "Scheduled",
+    "sppg_id": 1,
+    "calories_large": 150,
+    "protein_large": 120,
+    "fat_large": 150,
+    "carbs_large": 100,
+    "fiber_large": 10,
+    "calories_small": 20,
+    "protein_small": 50,
+    "fat_small": 100,
+    "carbs_small": 150,
+    "fiber_small": 200,
+    "bom": [
+        {
+            "id": 43,
+            "production_plan_id": 16,
+            "material_id": 1,
+            "material_name": "Beras Premium Cianjur",
+            "standard_weight_per_portion": 50,
+            "weight_large": {input Porsi Besar},
+            "weight_small": {input Porsi Kecil},
+            "total_required_weight": {(Porsi Besar * target porsi besar)+(Porsi kecil * target porsi kecil)}
+        }
+    ]
+}
+
+{
+    "menu_name": "[Porsi Besar] Nasi Kuning + Semur Sapi Giling + Tumis Buncis Wortel + Jeruk Pontianak",
+    "target_date": "2026-07-06",
+    "target_portions": 500,
+    "bom": [
+        {
+            "material_id": 1,
+            "material_name": "Beras Premium Cianjur",
+            "standard_weight_per_portion": 62.7,
+            "weight_large": 62.7,
+            "weight_small": 46.2,
+            "total_required_weight": 31.35
+        },
+        {
+            "material_id": 5,
+            "material_name": "Kentang Dieng Segar",
+            "standard_weight_per_portion": 62.7,
+            "weight_large": 62.7,
+            "weight_small": 46.2,
+            "total_required_weight": 31.35
+        },
+        {
+            "material_id": 6,
+            "material_name": "Kentang Goreng Beku",
+            "standard_weight_per_portion": 62.7,
+            "weight_large": 62.7,
+            "weight_small": 46.2,
+            "total_required_weight": 31.35
+        },
+        {
+            "material_id": 7,
+            "material_name": "Kentang Merah",
+            "standard_weight_per_portion": 62.7,
+            "weight_large": 62.7,
+            "weight_small": 46.2,
+            "total_required_weight": 31.35
+        },
+        {
+            "material_id": 12,
+            "material_name": "Daging Ayam Kampung",
+            "standard_weight_per_portion": 80.6,
+            "weight_large": 80.6,
+            "weight_small": 59.38947368421052,
+            "total_required_weight": 40.3
+        }
+    ]
+}
+
+{
+    "menu_name": "[Porsi Besar & Kecil] Nasi Putih + Daging Sapi Semur Legit + Cah Sayur Daun Singkong + Buah Semangka Merah",
+    "target_date": "2026-07-06",
+    "target_portions": 1580,
+    "target_portions_large": 1000,
+    "target_portions_small": 580,
+    "calories_large": 572.6,
+    "protein_large": 28.4,
+    "fat_large": 12.6,
+    "carbs_large": 82.5,
+    "fiber_large": 0,
+    "calories_small": 421.9,
+    "protein_small": 20.9,
+    "fat_small": 9.3,
+    "carbs_small": 60.8,
+    "fiber_small": 0,
+    "bom": [
+        {
+            "material_id": 1,
+            "material_name": "Beras Premium Cianjur",
+            "standard_weight_per_portion": 100,
+            "weight_large": 100,
+            "weight_small": 73.7,
+            "total_required_weight": 142.7
+        },
+        {
+            "material_id": 36,
+            "material_name": "Bakso Sapi Halus",
+            "standard_weight_per_portion": 80,
+            "weight_large": 80,
+            "weight_small": 58.9,
+            "total_required_weight": 114.2
+        },
+        {
+            "material_id": 58,
+            "material_name": "Sayur Daun Singkong",
+            "standard_weight_per_portion": 40,
+            "weight_large": 40,
+            "weight_small": 29.5,
+            "total_required_weight": 57.1
+        },
+        {
+            "material_id": 74,
+            "material_name": "Buah Semangka Merah",
+            "standard_weight_per_portion": 1,
+            "weight_large": 1,
+            "weight_small": 0.7,
+            "total_required_weight": 1.4
+        }
+    ]
+}
+
+
+// prompt
+sekarang buat untuk login as Kepala Sppg kan navigator ke halaman pilih_menu.dart nah coba tambahin button planning. jadi ada 3 button pilihan menu untuk kepala sppg, yaitu: Procurement, Distribution dan Planning
+Buat Halaman Baru bernama "Planning" isinya header "Perencanaan Menu & Gizi dibawahnya ada card yang berisi header "Menu Generator", lalu dibawah header "menu generator"  ada card Keterangan dengan
+header: "Standar Gizi Penerima"
+body:
+"Porsi Besar (SD-SMA)"
+"Porsi Keci (PAUD-TK)",
+lalu note kecil * Menghasilkan 1 Menu dengan takaran porsi digabungkan
+
+lalu dibawah card keterangan tadi ada beberapa input form:
+1. Jumlah Porsi Besar (1900KCAL)
+2. Jumlah Porsi Kecil (1400KCAL)
+3. Batas Biaya per Porsi (satuan Rp / Rupiah)
+4. dan input pilih tanggal mulai
+5. Durasi Perencanaan (berbentuk dropdown dengan item dropdown: 1. Harian (1 Hari), 2. Mingguan (7 Hari), 3. Bulanan (30 Hari tanpa minggu), 4. 1 tahun (365 hari tanpa minggu))
+
+lalu dibawahnya ada 2 button "Generate Rencana Menu" dan "Tambah Rencana Menu"
+
+note: jangan ubah codeku dan alur bisnis lainnya selain yang aku perintahkan
+
+
+
+sekarang di planning_page.dart kan ada button Generate Rencana Menu, nah bisa gak ketika tap button itu menjalankan komunikasi API POST:
+url:
+https://sppg.cbinstrument.com/api/production/menu-generator
+header:
+1. x-user-Sppg-Id : {sppg_id}
+2. x-user-Role : {role}
+
+body:
+{
+    "portions_large": {input porsi besar},
+    "portions_small": {input porsi kecil},
+    "budget": {input batas biaya per porsi},
+    "duration": {dropdown selected item(Durasi Perencanaan)},
+    "start_date": "{input pilih tanggal mulai}"
+}
+
+nanti responsenya akan seperti ini:
+{
+    "plans": [
+        {
+            "day": 1,
+            "date": "2026-07-02",
+            "month_name": "Juli",
+            "recipient_type": "Porsi Besar & Kecil",
+            "recipe_id": 167894,
+            "recipe_name": "Nasi Putih + Daging Sapi Semur Legit + Cah Sayur Daun Singkong + Buah Semangka Merah",
+            "ingredients": [
+                {
+                    "ingredient_id": 1,
+                    "name": "Beras Premium Cianjur",
+                    "category": "karbo",
+                    "weight_per_portion": 100,
+                    "weight_large": 100,
+                    "weight_small": 73.68421052631578,
+                    "total_weight": 142.73684210526315,
+                    "unit": "Kg",
+                    "cost_per_portion": 1355.0966022651567,
+                    "total_cost": 2141052.6315789474,
+                    "is_substituted": false,
+                    "substituted_for": ""
+                },
+                {
+                    "ingredient_id": 36,
+                    "name": "Bakso Sapi Halus",
+                    "category": "protein",
+                    "weight_per_portion": 80,
+                    "weight_large": 80,
+                    "weight_small": 58.94736842105263,
+                    "total_weight": 114.18947368421054,
+                    "unit": "Kg",
+                    "cost_per_portion": 4697.668221185877,
+                    "total_cost": 7422315.789473685,
+                    "is_substituted": false,
+                    "substituted_for": ""
+                },
+                {
+                    "ingredient_id": 58,
+                    "name": "Sayur Daun Singkong",
+                    "category": "sayur",
+                    "weight_per_portion": 40,
+                    "weight_large": 40,
+                    "weight_small": 29.473684210526315,
+                    "total_weight": 57.09473684210527,
+                    "unit": "Kg",
+                    "cost_per_portion": 216.8154563624251,
+                    "total_cost": 342568.42105263163,
+                    "is_substituted": false,
+                    "substituted_for": ""
+                },
+                {
+                    "ingredient_id": 74,
+                    "name": "Buah Semangka Merah",
+                    "category": "buah",
+                    "weight_per_portion": 1,
+                    "weight_large": 1,
+                    "weight_small": 0.7368421052631579,
+                    "total_weight": 1.4273684210526316,
+                    "unit": "Kg",
+                    "cost_per_portion": 7.227181878747502,
+                    "total_cost": 11418.947368421053,
+                    "is_substituted": false,
+                    "substituted_for": ""
+                }
+            ],
+            "calories_large": 572.6,
+            "protein_large": 28.408,
+            "fat_large": 12.582,
+            "carbs_large": 82.54,
+            "fiber_large": 0,
+            "calories_small": 421.9157894736842,
+            "protein_small": 20.93221052631579,
+            "fat_small": 9.270947368421051,
+            "carbs_small": 60.81894736842105,
+            "fiber_small": 0,
+            "portions_large": 1000,
+            "portions_small": 580,
+            "target_portions": 1580,
+            "calories": 572.6,
+            "calories_pct": 100.4561403508772,
+            "protein": 28.408,
+            "protein_pct": 189.38666666666668,
+            "fat": 12.582,
+            "fat_pct": 69.9,
+            "carbs": 82.54,
+            "carbs_pct": 98.26190476190477,
+            "cost_per_portion": 6276.807461692206,
+            "total_cost": 9917355.789473685,
+            "score": 100.44638507661558,
+            "notes": "Menu Porsi Besar (1000) & Porsi Kecil (580) digabungkan. Memenuhi syarat gizi, biaya, dan rotasi."
+        },
+        {
+            "day": 7,
+            "date": "2026-07-09",
+            "month_name": "Juli",
+            "recipient_type": "Porsi Besar & Kecil",
+            "recipe_id": 171170,
+            "recipe_name": "Nasi Putih + Daging Sapi Empal Serundeng + Cah Sayur Daun Singkong + Buah Semangka Merah",
+            "ingredients": [
+                {
+                    "ingredient_id": 1,
+                    "name": "Beras Premium Cianjur",
+                    "category": "karbo",
+                    "weight_per_portion": 100,
+                    "weight_large": 100,
+                    "weight_small": 73.68421052631578,
+                    "total_weight": 142.73684210526315,
+                    "unit": "Kg",
+                    "cost_per_portion": 1355.0966022651567,
+                    "total_cost": 2141052.6315789474,
+                    "is_substituted": false,
+                    "substituted_for": ""
+                },
+                {
+                    "ingredient_id": 36,
+                    "name": "Bakso Sapi Halus",
+                    "category": "protein",
+                    "weight_per_portion": 80,
+                    "weight_large": 80,
+                    "weight_small": 58.94736842105263,
+                    "total_weight": 114.18947368421054,
+                    "unit": "Kg",
+                    "cost_per_portion": 4697.668221185877,
+                    "total_cost": 7422315.789473685,
+                    "is_substituted": false,
+                    "substituted_for": ""
+                },
+                {
+                    "ingredient_id": 58,
+                    "name": "Sayur Daun Singkong",
+                    "category": "sayur",
+                    "weight_per_portion": 40,
+                    "weight_large": 40,
+                    "weight_small": 29.473684210526315,
+                    "total_weight": 57.09473684210527,
+                    "unit": "Kg",
+                    "cost_per_portion": 216.8154563624251,
+                    "total_cost": 342568.42105263163,
+                    "is_substituted": false,
+                    "substituted_for": ""
+                },
+                {
+                    "ingredient_id": 74,
+                    "name": "Buah Semangka Merah",
+                    "category": "buah",
+                    "weight_per_portion": 1,
+                    "weight_large": 1,
+                    "weight_small": 0.7368421052631579,
+                    "total_weight": 1.4273684210526316,
+                    "unit": "Kg",
+                    "cost_per_portion": 7.227181878747502,
+                    "total_cost": 11418.947368421053,
+                    "is_substituted": false,
+                    "substituted_for": ""
+                }
+            ],
+            "calories_large": 572.6,
+            "protein_large": 28.408,
+            "fat_large": 12.582,
+            "carbs_large": 82.54,
+            "fiber_large": 0,
+            "calories_small": 421.9157894736842,
+            "protein_small": 20.93221052631579,
+            "fat_small": 9.270947368421051,
+            "carbs_small": 60.81894736842105,
+            "fiber_small": 0,
+            "portions_large": 1000,
+            "portions_small": 580,
+            "target_portions": 1580,
+            "calories": 572.6,
+            "calories_pct": 100.4561403508772,
+            "protein": 28.408,
+            "protein_pct": 189.38666666666668,
+            "fat": 12.582,
+            "fat_pct": 69.9,
+            "carbs": 82.54,
+            "carbs_pct": 98.26190476190477,
+            "cost_per_portion": 6276.807461692206,
+            "total_cost": 9917355.789473685,
+            "score": 100.44638507661558,
+            "notes": "Menu Porsi Besar (1000) & Porsi Kecil (580) digabungkan. Memenuhi syarat gizi, biaya, dan rotasi."
+        }
+    ]
+}
+
+nanti buat card baru buat simpen responsenya, kalau user belum tap button "Generate rancana menu" maka card akan menampilkan tulisan "belum ada rencana"
+
+tapi ketika user sudah tap maka card tersebut akan menampilkan:
+1. row1 hari object "day", row2 object "date", row3 object "recipient_type"
+2. row1 Porsi Besar object "portions_large", row2 Porsi Kecil object "portions_small"
+3. Header text besar dan tebal object "recipe_name",
+4. row1 card dengan isi: column header "Porsi Besar (1900kkal)", row1 card kecil dengan isi column1: text Kalori, Column2 object "calories_large", row2 card kecil dengan isi column1: text Protein, Column2 object "protein_large" row3 card kecil dengan isi column1: text Lemag, Column2 object "fat_large", row4 card kecil dengan isi column1: text Karbo, Column2 object "carbs_large", row2 card dengan isi: column header "Porsi Kecil (1400kkal)", row1 card kecil dengan isi column1: text Kalori, Column2 object "calories_small", row2 card kecil dengan isi column1: text Protein, Column2 object "protein_small" row3 card kecil dengan isi column1: text Lemag, Column2 object "fat_small", row4 card kecil dengan isi column1: text Karbo, Column2 object "carbs_small"
+5. card berisi: column1 header Rata-Rata Biaya/Porsi, column2 object "cost_per_portion", column3 total: Rp. object "total_cost"
+6. card notifikasi modern warna hijau berisi row1 icon hijau "check_rounded", row2 text object "notes"
+7. Text "KOMPOSISI FORMULA BAHAN BAKU (BOM)"
+8. table dengan table header1: Nama Bahan, header2: Kategori, header3: Porsi Besar, header4: Porsi Kecil, header5: Kebutuhan Total object "target_portions", header6: Biaya Porsi, header7: Status
+9. table data: nama bahan object "name", Kategori object "category", porsi besar object "weight_large", porsi Kecil "weight_small", Kebutuhan Total object "total_weight" satuan "unit", Biaya Porsi object "cost_per_portion", Status Badge hijau modern "Tersedia"
+
+note: jangan ubah codeku dan alur bisnis lainnya selain yang aku perintahkan
+
+
+
+
+
+
+
+// prompt 2
+Buat 1 card lagi dibawahnya isinya untuk:
+- Header: "Master Data Explorer (Fondasi Sistem)"
+- sub header: "Akses langsung ke database bahan Gizi template resep standard, dan standard gizi penerima"
+- row pilihan (user bisa pilih salah satu):
+1. Database Bahan Baku
+2. Template Resep (BOM)
+3. Standar Gizi Penerima
+4. Menu Yang sudah digunakan
+5. Aturan Larangan BGN
+
+untuk isi pilihan "Database Bahan Baku" terdiri dari:
+- 2 button diatas, button1: "Hapus Semua Bahan" dan button2: "Tambah Bahan Baru"
+- lalu ada table dibawahnya hasil komunikasi GET API url:https://sppg.cbinstrument.com/api/production/ingredients dengan header
+1. x-user-Sppg-Id : {sppg_id}
+2. x-user-Role : {role}
+response:
+[
+    {
+        "id": 1,
+        "name": "Beras Premium Cianjur",
+        "category": "karbo",
+        "calories": 360,
+        "protein": 7,
+        "fat": 0.5,
+        "carbs": 80,
+        "price_per_unit": 15000,
+        "unit": "Kg"
+    },
+    {
+        "id": 2,
+        "name": "Beras Merah Organik",
+        "category": "karbo",
+        "calories": 360,
+        "protein": 7,
+        "fat": 0.5,
+        "carbs": 80,
+        "price_per_unit": 22000,
+        "unit": "Kg"
+    }
+] 
+
+isi table nya sebagai berikut:
+1. table header: ID, Nama Bahan, Kategori, Kalori(kkal/100g atau pcs), protein(g/100g/pcs), lemag(g/100g/pc), Carbo(g/100g/pc), Harga Unit, Aksi.
+2. table body: ID object "id", Nama Bahan object "name", Kategori object "category", Kalori object "calories", protein object "protein", lemag object "fat", Carbo object "carbs", Harga Unit object "price_per_unit" (satuan rupiah/Rp), Aksi ini berisi 2 button Ubah dan Hapus
+
+note: jangan ubah code maupun alur bisnis ku, selain apa yang aku perintahkan.
+
+
+
+
+
+// prompt3
+untuk bagian Templlate Resep (BOM) isinya:
+- ada 2 button button1 "Hapus Semua Resep" button2 "Tambah Resep Baru"
+terus dibawahnya ada cardyang berisi hasil komunikasi GET API:
+url:
+https://sppg.cbinstrument.com/api/production/recipes
+header:
+1. x-user-Sppg-Id : {sppg_id}
+2. x-user-Role : {role}
+response:
+[
+    {
+        "id": 1,
+        "name": "Nasi Putih + Daging Ayam Teriyaki + Tumis Wortel Buncis + Susu UHT 200ml",
+        "target_category": "Porsi Besar",
+        "items": [
+            {
+                "id": 1,
+                "recipe_id": 1,
+                "ingredient_id": 1,
+                "initial_weight": 0,
+                "calculated_weight": 36.84210526315789,
+                "benchmark_weight": 0,
+                "adjustment_weight": 0,
+                "final_weight": 36.84210526315789
+            },
+            {
+                "id": 2,
+                "recipe_id": 1,
+                "ingredient_id": 2,
+                "initial_weight": 0,
+                "calculated_weight": 36.84210526315789,
+                "benchmark_weight": 0,
+                "adjustment_weight": 0,
+                "final_weight": 36.84210526315789
+            },
+            {
+                "id": 3,
+                "recipe_id": 1,
+                "ingredient_id": 6,
+                "initial_weight": 0,
+                "calculated_weight": 36.84210526315789,
+                "benchmark_weight": 0,
+                "adjustment_weight": 0,
+                "final_weight": 36.84210526315789
+            },
+            {
+                "id": 4,
+                "recipe_id": 1,
+                "ingredient_id": 7,
+                "initial_weight": 0,
+                "calculated_weight": 36.84210526315789,
+                "benchmark_weight": 0,
+                "adjustment_weight": 0,
+                "final_weight": 36.84210526315789
+            },
+            {
+                "id": 5,
+                "recipe_id": 1,
+                "ingredient_id": 10,
+                "initial_weight": 0,
+                "calculated_weight": 36.84210526315789,
+                "benchmark_weight": 0,
+                "adjustment_weight": 0,
+                "final_weight": 36.84210526315789
+            }
+        ],
+        "popularity": 9,
+        "month": "Januari"
+    }
+] 
+ 2 grid yang berisi:
+1. row1: badge object "target_category": "Porsi Besar", row2: badge populer object "popularity" /10
+2. header text besar dan bold object "name"
+3. small text Bulan: object "month"
+4. items diambil dari object "items": [
+ row1: nama ingredient diambil dari "ingredient_id", row2: object "final_weight"
+]
+
+note: janga ubah code dan alur bisnisku selain apa yang aku perintahkan
+

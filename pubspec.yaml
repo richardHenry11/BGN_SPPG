@@ -50,6 +50,7 @@ dependencies:
   geocoding: ^4.0.0
   image: ^4.8.0
   shared_preferences: ^2.2.2
+  web_socket_channel: ^3.0.1
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +78,8 @@ flutter:
   assets:
       - assets/finger-scan.png
       - assets/sms.png
+      - assets/images/
+      - assets/truck_sprites_16frames/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

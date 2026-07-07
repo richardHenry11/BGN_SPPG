@@ -1,6 +1,7 @@
-import 'package:bgn/distribusi/pages/distribusi_home_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
-import 'main_page.dart';
+import 'package:provider/provider.dart';
+import 'package:bgn/distribusi/providers/auth_provider.dart';
 
 class PilihMenuPage extends StatelessWidget {
   const PilihMenuPage({super.key});
@@ -53,21 +54,26 @@ class PilihMenuPage extends StatelessWidget {
                 label: 'Procurement',
                 description: 'Kelola pengadaan bahan baku',
                 color: const Color(0xFF1A8FCC),
-                onTap: () => Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MainPage()),
-                ),
+                onTap: () => context.push('/procurement'),
               ),
+              if (context.watch<AuthProvider>().currentRole == 'kepala_sppg' ||
+                  context.watch<AuthProvider>().currentRole == 'ag') ...[
+                const SizedBox(height: 20),
+                _MenuButton(
+                  icon: Icons.assignment_rounded,
+                  label: 'Planning',
+                  description: 'Perencanaan menu & gizi',
+                  color: const Color(0xFFFF9800),
+                  onTap: () => context.push('/planning'),
+                ),
+              ],
               const SizedBox(height: 20),
               _MenuButton(
                 icon: Icons.local_shipping_rounded,
                 label: 'Distribution',
                 description: 'Kelola distribusi ke wilayah',
                 color: const Color(0xFF4CAF50),
-                onTap: () => Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DistribusiHomePage()),
-                ),
+                onTap: () => context.go('/'),
               ),
             ],
           ),
@@ -106,14 +112,14 @@ class _MenuButton extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color.fromARGB(255, 30, 30, 30),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: color.withValues(alpha: 0.2)),
+              border: Border.all(color: color.withOpacity(0.2)),
             ),
             child: Row(
               children: [
                 Container(
                   width: 52, height: 52,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
+                    color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(icon, color: color, size: 26),

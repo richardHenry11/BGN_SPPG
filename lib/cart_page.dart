@@ -253,7 +253,7 @@ class _CartPageState extends State<CartPage> {
                   child: Container(
                     width: 28, height: 28,
                     decoration: BoxDecoration(
-                      color: Colors.redAccent.withValues(alpha: 0.1),
+                      color: Colors.redAccent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(7),
                     ),
                     child: const Icon(Icons.close, color: Colors.redAccent, size: 14),

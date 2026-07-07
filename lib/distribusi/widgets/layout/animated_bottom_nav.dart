@@ -17,12 +17,11 @@ class AnimatedBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: BGNColors.surface,
         border: Border(
           top: BorderSide(color: BGNColors.border, width: 0.5),
         ),
       ),
-      padding: const EdgeInsets.only(top: 6, bottom: 12),
       child: Row(
         children: List.generate(items.length, (i) {
           final isActive = i == currentIndex;
@@ -55,31 +54,22 @@ class _NavItemWidget extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        decoration: BoxDecoration(
-          color: isActive
-              ? BGNColors.primary.withValues(alpha: 0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, anim) =>
+                  FadeTransition(opacity: anim, child: child),
+              child: Icon(
+                key: ValueKey(isActive),
+                isActive ? item.activeIcon : item.icon,
+                size: 22,
                 color: isActive
                     ? BGNColors.primary
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                isActive ? item.activeIcon : item.icon,
-                size: 20,
-                color: isActive ? Colors.white : BGNColors.textSecondary,
+                    : BGNColors.textSecondary,
               ),
             ),
             const SizedBox(height: 2),
@@ -88,7 +78,7 @@ class _NavItemWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight:
-                    isActive ? FontWeight.w600 : FontWeight.w400,
+                    isActive ? FontWeight.w500 : FontWeight.normal,
                 color: isActive
                     ? BGNColors.primary
                     : BGNColors.textSecondary,

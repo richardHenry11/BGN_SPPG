@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
@@ -36,6 +38,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
   List<Map<String, dynamic>> _supplierProducts = [];
   List<Map<String, dynamic>> get _approvedOrders => _apiOrders.where((o) => (o['status'] as String?) == 'Approved' && (o['payment_status'] as String?) == 'Paid').toList();
   List<Map<String, dynamic>> get _shippedOrders => _apiOrders.where((o) => (o['status'] as String?) == 'Shipped').toList();
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -44,10 +47,17 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
     _refresh();
     _fetchOrders();
     _fetchSupplierProducts();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        _fetchOrders();
+        _fetchSupplierProducts();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
     DraftStore.incomingNotifier.removeListener(_refresh);
     super.dispose();
   }
@@ -59,6 +69,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
   }
 
   Future<void> _fetchOrders() async {
+    if (!mounted) return;
     try {
       final auth = context.read<AuthProvider>();
       final res = await http.get(
@@ -81,6 +92,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
   }
 
   Future<void> _fetchSupplierProducts() async {
+    if (!mounted) return;
     try {
       final auth = context.read<AuthProvider>();
       final res = await http.get(
@@ -533,7 +545,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const OrderSupplierPage()),
-                    )?.then((_) => _fetchOrders());
+                    ).then((_) => _fetchOrders());
                   }),
                   const SizedBox(height: 8),
                   _buildOrderList(),
@@ -598,7 +610,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const SupplierProductsPage()),
-              )?.then((_) => _fetchSupplierProducts());
+              ).then((_) => _fetchSupplierProducts());
             },
           ),
           ListTile(
@@ -620,7 +632,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const OrderSupplierPage()),
-              )?.then((_) => _fetchOrders());
+              ).then((_) => _fetchOrders());
             },
           ),
           ListTile(
@@ -640,16 +652,30 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
             leading: const Icon(Icons.logout, color: Color(0xFFE55555)),
             title: const Text('Logout', style: TextStyle(color: Color(0xFFE55555))),
             onTap: () async {
-              DraftStore.loggedInUser = '';
-              DraftStore.loggedInRole = '';
-              await context.read<AuthProvider>().logout();
-              if (!context.mounted) return;
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MyHomePageMyWidget(),
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Konfirmasi'),
+                  content: const Text('Apakah Anda yakin ingin logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Tidak'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Ya'),
+                    ),
+                  ],
                 ),
               );
+              if (confirmed != true) return;
+              DraftStore.loggedInUser = '';
+              DraftStore.loggedInRole = '';
+              if (!context.mounted) return;
+              await context.read<AuthProvider>().logout();
+              if (!context.mounted) return;
+              context.go('/login-legacy');
             },
           ),
           const SizedBox(height: 16),
@@ -679,7 +705,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.store, color: Colors.white, size: 28),
@@ -813,7 +839,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const SupplierProductsPage()),
-              )?.then((_) => _fetchSupplierProducts());
+              ).then((_) => _fetchSupplierProducts());
             },
             child: const Text(
               'Lihat Semua',
@@ -935,7 +961,7 @@ class _DashboardSuppPageState extends State<DashboardSuppPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.12),
+              color: statusColor.withOpacity(0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

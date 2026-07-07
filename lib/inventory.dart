@@ -599,7 +599,7 @@ class _InventoryPageState extends State<InventoryPage> {
               Container(
                 width: 38, height: 38,
                 decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
+                  color: accentColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -622,7 +622,7 @@ class _InventoryPageState extends State<InventoryPage> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: accentColor.withValues(alpha: 0.12),
+                            color: accentColor.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -949,7 +949,7 @@ class _InventoryPageState extends State<InventoryPage> {
         ),
         boxShadow: [
           BoxShadow(
-            color: barColor.withValues(alpha: 0.04),
+            color: barColor.withOpacity(0.04),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -1010,9 +1010,9 @@ class _InventoryPageState extends State<InventoryPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
-                  color: barColor.withValues(alpha: 0.1),
+                  color: barColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: barColor.withValues(alpha: 0.2)),
+                  border: Border.all(color: barColor.withOpacity(0.2)),
                 ),
                 child: Text(
                   '${stock.toInt()} $unit',
@@ -1058,7 +1058,7 @@ class _InventoryPageState extends State<InventoryPage> {
                     child: Text(
                       '$pct%',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: Colors.white.withOpacity(0.6),
                         fontSize: 8,
                         fontWeight: FontWeight.w700,
                         height: 1,
@@ -1074,7 +1074,7 @@ class _InventoryPageState extends State<InventoryPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: barColor.withValues(alpha: 0.08),
+                  color: barColor.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(

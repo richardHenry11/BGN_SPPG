@@ -276,7 +276,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
       backgroundColor: const Color.fromARGB(255, 7, 32, 52),
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 7, 32, 52),
-        iconTheme: const IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: false,
         title: const Text(
           "Marketplace",
           style: TextStyle(color: Colors.white),

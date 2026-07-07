@@ -42,7 +42,7 @@ class _TabRingkasanState extends State<TabRingkasan> {
                   horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color:
-                    isSelected ? BGNColors.primaryLight : BGNColors.white,
+                    isSelected ? BGNColors.primaryLight : BGNColors.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected
@@ -192,7 +192,7 @@ class _RingkasanDetail extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: BGNColors.white,
+            color: BGNColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: BGNColors.border),
           ),
@@ -284,7 +284,7 @@ class _RingkasanDetail extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: BGNColors.white,
+            color: BGNColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: BGNColors.border),
           ),

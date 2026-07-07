@@ -61,7 +61,7 @@ class _CarLoadingState extends State<CarLoading>
                   size: Size(size * 4, size * 0.3),
                   painter: _RoadPainter(
                     progress: _controller.value,
-                    color: carColor.withValues(alpha: 0.5),
+                    color: carColor.withOpacity(0.5),
                   ),
                 ),
               ),

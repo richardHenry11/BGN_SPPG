@@ -1,12 +1,5 @@
-// lib/widgets/common/foto_bukti_widget.dart
-//
-// Dependency yang dibutuhkan (tambahkan di pubspec.yaml):
-//   image_picker: ^1.1.2
-//   geolocator: ^13.0.2
-//   geocoding: ^3.0.0
-//   intl: ^0.19.0
-
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,11 +7,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart';
 import 'package:bgn/distribusi/theme/colors.dart';
+import 'package:bgn/distribusi/utils/watermark.dart';
 import 'car_loading.dart';
 
-// ── Model data foto ───────────────────────────────────────
 class FotoBuktiData {
   final String filePath;
+  final Uint8List? bytes;
   final String tanggal;
   final String jam;
   final double latitude;
@@ -28,6 +22,7 @@ class FotoBuktiData {
 
   FotoBuktiData({
     required this.filePath,
+    this.bytes,
     required this.tanggal,
     required this.jam,
     required this.latitude,
@@ -37,17 +32,18 @@ class FotoBuktiData {
   });
 }
 
-// ── Widget utama ──────────────────────────────────────────
 class FotoBuktiWidget extends StatefulWidget {
   final String title;
-  final String petugas; // dari auth provider, pass dari parent
+  final String petugas;
   final Function(FotoBuktiData? data) onUpdate;
+  final bool enabled;
 
   const FotoBuktiWidget({
     super.key,
     required this.title,
     required this.petugas,
     required this.onUpdate,
+    this.enabled = true,
   });
 
   @override
@@ -61,78 +57,105 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
 
   final ImagePicker _picker = ImagePicker();
 
-  // ── Ambil foto dari kamera ──
   Future<void> _ambilFoto() async {
     if (!mounted) return;
-    setState(() {
-      _isLoading = true;
-      _errorMsg = null;
-    });
-
+    setState(() { _isLoading = true; _errorMsg = null; });
     try {
-      // 1. Ambil foto dari kamera
+      final source = kIsWeb ? ImageSource.gallery : ImageSource.camera;
       final XFile? foto = await _picker.pickImage(
-        source: ImageSource.camera,
+        source: source,
         imageQuality: 85,
         maxWidth: 1280,
         maxHeight: 960,
       );
-
       if (foto == null) {
         if (mounted) setState(() => _isLoading = false);
         return;
       }
-
-      // 2. Ambil lokasi GPS
-      final position = await _getLocation();
-
-      // 3. Reverse geocoding → alamat lengkap
-      final alamat = await _getAlamat(position.latitude, position.longitude);
-
-      // 4. Format waktu
-      final now = DateTime.now();
-      final tanggal = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(now);
-      final jam = DateFormat('HH:mm').format(now);
-
-      final data = FotoBuktiData(
-        filePath: foto.path,
-        tanggal: tanggal,
-        jam: jam,
-        latitude: position.latitude,
-        longitude: position.longitude,
-        alamatLengkap: alamat,
-        petugas: widget.petugas,
-      );
-
-      if (!mounted) return;
-      setState(() {
-        _data = data;
-        _isLoading = false;
-      });
-
-      widget.onUpdate(data);
+      await _processPickedImage(foto);
     } catch (e) {
       if (!mounted) return;
-      final msg = e.toString().replaceFirst('Exception: ', '');
       setState(() {
         _isLoading = false;
-        _errorMsg = msg.contains('ACCESS_FINE_LOCATION')
-            ? 'Izin lokasi belum diatur. Tutup aplikasi dan jalankan ulang.'
-            : msg;
+        _errorMsg = e.toString().replaceFirst('Exception: ', '');
       });
     }
   }
 
-  // ── Hapus foto ──
+  Future<void> _pilihFile() async {
+    if (!mounted) return;
+    setState(() { _isLoading = true; _errorMsg = null; });
+    try {
+      final XFile? foto = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1280,
+        maxHeight: 960,
+      );
+      if (foto == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+      await _processPickedImage(foto);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMsg = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  Future<void> _processPickedImage(XFile foto) async {
+    double lat = 0;
+    double lng = 0;
+    String alamat = '(lokasi tidak tersedia)';
+
+    if (!kIsWeb) {
+      try {
+        final position = await _getLocation();
+        lat = position.latitude;
+        lng = position.longitude;
+        alamat = await _getAlamat(lat, lng);
+      } catch (_) {
+        // GPS unavailable – continue with dummy
+      }
+    }
+
+    final now = DateTime.now();
+    final tanggal = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(now);
+    final jam = DateFormat('HH:mm').format(now);
+
+    Uint8List? bytes;
+    if (kIsWeb) {
+      bytes = await foto.readAsBytes();
+    }
+
+    final data = FotoBuktiData(
+      filePath: foto.path,
+      bytes: bytes,
+      tanggal: tanggal,
+      jam: jam,
+      latitude: lat,
+      longitude: lng,
+      alamatLengkap: alamat,
+      petugas: widget.petugas,
+    );
+
+    if (!kIsWeb) {
+      await applyWatermark(foto.path, data);
+    }
+
+    if (!mounted) return;
+    setState(() { _data = data; _isLoading = false; });
+    widget.onUpdate(data);
+  }
+
   void _hapusFoto() {
-    setState(() {
-      _data = null;
-      _errorMsg = null;
-    });
+    setState(() { _data = null; _errorMsg = null; });
     widget.onUpdate(null);
   }
 
-  // ── Dapatkan posisi GPS ──
   Future<Position> _getLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -159,7 +182,6 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
     );
   }
 
-  // ── Reverse geocoding ──
   Future<String> _getAlamat(double lat, double lng) async {
     try {
       final placemarks = await placemarkFromCoordinates(lat, lng);
@@ -182,7 +204,6 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
     }
   }
 
-  // ── Format koordinat ──
   String _formatKoordinat(double lat, double lng) {
     final latDir = lat >= 0 ? 'N' : 'S';
     final lngDir = lng >= 0 ? 'E' : 'W';
@@ -190,18 +211,45 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
         '${lng.abs().toStringAsFixed(5)}° $lngDir';
   }
 
+  Widget _buildImagePreview() {
+    if (_data!.bytes != null) {
+      return Image.memory(
+        _data!.bytes!,
+        height: 220,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        cacheWidth: 440,
+      );
+    }
+    return Image.file(
+      File(_data!.filePath),
+      height: 220,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      cacheWidth: 440,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isWeb = kIsWeb;
+
+    final isDisabled = !widget.enabled;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: BGNColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: BGNColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: AbsorbPointer(
+        absorbing: isDisabled,
+        child: Opacity(
+          opacity: isDisabled ? 0.5 : 1.0,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
           // ── Header ──
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -255,7 +303,7 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
                     CarLoading(size: 24),
                     SizedBox(height: 10),
                     Text(
-                      'Mengambil foto & lokasi...',
+                      'Mengambil foto...',
                       style: TextStyle(
                         fontSize: 12,
                         color: BGNColors.textSecondary,
@@ -272,16 +320,9 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
               children: [
                 Stack(
                   children: [
-                    // Foto
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        File(_data!.filePath),
-                        height: 220,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        cacheWidth: 440,
-                      ),
+                      child: _buildImagePreview(),
                     ),
 
                     // Tombol hapus
@@ -328,7 +369,6 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Baris 1: tanggal + jam
                               Row(
                                 children: [
                                   const Icon(TablerIcons.calendar,
@@ -357,49 +397,45 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
                                 ],
                               ),
                               const SizedBox(height: 3),
-
-                              // Baris 2: koordinat GPS
-                              Row(
-                                children: [
-                                  const Icon(TablerIcons.gps,
-                                      size: 10, color: Colors.white70),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _formatKoordinat(
-                                        _data!.latitude, _data!.longitude),
-                                    style: const TextStyle(
-                                      fontSize: 9,
-                                      color: Colors.white70,
-                                      fontFamily: 'monospace',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 3),
-
-                              // Baris 3: alamat lengkap
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(TablerIcons.map_pin,
-                                      size: 10, color: Colors.white70),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      _data!.alamatLengkap,
+                              if (!isWeb) ...[
+                                Row(
+                                  children: [
+                                    const Icon(TablerIcons.gps,
+                                        size: 10, color: Colors.white70),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _formatKoordinat(
+                                          _data!.latitude, _data!.longitude),
                                       style: const TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.white,
+                                        fontSize: 9,
+                                        color: Colors.white70,
+                                        fontFamily: 'monospace',
                                       ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 3),
-
-                              // Baris 4: petugas
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(TablerIcons.map_pin,
+                                        size: 10, color: Colors.white70),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        _data!.alamatLengkap,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.white,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                              ],
                               Row(
                                 children: [
                                   const Icon(TablerIcons.user,
@@ -414,13 +450,12 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
                                     ),
                                   ),
                                   const Spacer(),
-                                  // Badge BGN
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: BGNColors.primary
-                                          .withOpacity(0.85),
+                                          .withValues(alpha: 0.85),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: const Text(
@@ -443,7 +478,6 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
                   ],
                 ),
 
-                // Detail info di bawah foto (card)
                 const SizedBox(height: 8),
                 _InfoCard(data: _data!),
               ],
@@ -451,41 +485,74 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
 
           // ── Empty state + tombol ──
           else ...[
-            GestureDetector(
-              onTap: _ambilFoto,
-              child: Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  color: BGNColors.background,
-                  borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: BGNColors.border, style: BorderStyle.solid),
-                ),
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(TablerIcons.camera,
-                          size: 32, color: BGNColors.textSecondary),
-                      SizedBox(height: 8),
-                      Text(
-                        'Tap untuk buka kamera',
-                        style: TextStyle(
-                            fontSize: 12, color: BGNColors.textSecondary),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _pilihFile,
+                    child: Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: BGNColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: BGNColors.border),
                       ),
-                    ],
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(TablerIcons.file,
+                                size: 28, color: BGNColors.textSecondary),
+                            SizedBox(height: 6),
+                            Text('File',
+                                style: TextStyle(
+                                    fontSize: 11, color: BGNColors.textSecondary)),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                if (!isWeb) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _ambilFoto,
+                      child: Container(
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: BGNColors.background,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: BGNColors.border),
+                        ),
+                        child: const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(TablerIcons.camera,
+                                  size: 28, color: BGNColors.textSecondary),
+                              SizedBox(height: 6),
+                              Text('Kamera',
+                                  style: TextStyle(
+                                      fontSize: 11, color: BGNColors.textSecondary)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _ambilFoto,
-                icon: const Icon(TablerIcons.camera, size: 16),
-                label: const Text('Ambil foto + lokasi GPS',
-                    style: TextStyle(fontSize: 12)),
+                onPressed: isWeb ? _pilihFile : _ambilFoto,
+                icon: Icon(isWeb ? TablerIcons.file : TablerIcons.camera, size: 16),
+                label: Text(
+                    isWeb ? 'Pilih file foto' : 'Ambil foto + lokasi GPS',
+                    style: const TextStyle(fontSize: 12)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: BGNColors.primary,
                   foregroundColor: Colors.white,
@@ -498,7 +565,6 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
             ),
           ],
 
-          // ── Error ──
           if (_errorMsg != null) ...[
             const SizedBox(height: 8),
             Container(
@@ -521,7 +587,7 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: _ambilFoto,
+                    onTap: isWeb ? _pilihFile : _ambilFoto,
                     child: const Text(
                       'Coba lagi',
                       style: TextStyle(
@@ -534,14 +600,15 @@ class _FotoBuktiWidgetState extends State<FotoBuktiWidget> {
                 ],
               ),
             ),
+            ],
           ],
-        ],
+        ),
       ),
-    );
+    ),
+  );
   }
 }
 
-// ── Info card di bawah foto ───────────────────────────────
 class _InfoCard extends StatelessWidget {
   final FotoBuktiData data;
   const _InfoCard({required this.data});

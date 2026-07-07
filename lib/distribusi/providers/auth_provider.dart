@@ -41,93 +41,27 @@ class AuthProvider extends ChangeNotifier {
   String? loginError;
 
   bool get isLoggedIn => _userData != null;
-
-  // ── Hardcoded roles + users (fallback / role switcher) ──
-
-  final List<RoleModel> roles = [
-    RoleModel(
-      id: 'kepala_sppg',
-      label: 'Kepala SPPG',
-      description: 'Monitoring & kontrol distribusi',
-      icon: TablerIcons.building,
-    ),
-    RoleModel(
-      id: 'aslab',
-      label: 'Aslab / Pengantar',
-      description: 'Validasi barang keluar & masuk',
-      icon: TablerIcons.package,
-    ),
-    RoleModel(
-      id: 'driver',
-      label: 'Driver',
-      description: 'Pengiriman & tracking',
-      icon: TablerIcons.truck,
-    ),
-    RoleModel(
-      id: 'pic_sekolah',
-      label: 'PIC / Penerima',
-      description: 'Penerimaan di lokasi',
-      icon: TablerIcons.school,
-    ),
-    RoleModel(
-      id: 'accounting',
-      label: 'Accounting',
-      description: 'Monitoring keuangan & validasi',
-      icon: TablerIcons.report_money,
-    ),
-  ];
-
-  final Map<String, UserModel> _mockUsers = {
-    'kepala_sppg': UserModel(name: 'Petugas 01', unit: 'SPPG Bandung Barat'),
-    'aslab':       UserModel(name: 'Aslab 01',   unit: 'Dapur SPPG'),
-    'driver':      UserModel(name: 'Driver 01',  unit: 'Armada BGN-01'),
-    'pic_sekolah': UserModel(name: 'Penerima 01', unit: 'SDN 01'),
-    'accounting': UserModel(name: 'Akuntan 01', unit: 'Keuangan SPPG'),
-  };
-
-  String _currentRole = 'kepala_sppg';
-
-  // ── Getters ─────────────────────────────────────────────
-
-  String get currentRole =>
-      _userData?['role'] as String? ?? _currentRole;
-
+  String? get token => _token;
+  int? get userId => _userData?['id'] as int?;
   String? get sppgId => (_userData?['sppg_id'] ?? _userData?['sppgId'])?.toString();
+  String? get email => _userData?['email'] as String?;
   String? get supplierId => (_userData?['supplier_id'])?.toString();
-
-  RoleModel get activeRole =>
-      roles.firstWhere((r) => r.id == currentRole, orElse: () => roles.first);
-
-  UserModel get activeUser {
-    if (_userData != null) {
-      return UserModel(
-        name: _userData!['name'] as String? ?? 'Pengguna',
-        unit: _userData!['location'] as String? ?? '-',
-      );
-    }
-    return _mockUsers[_currentRole]!;
-  }
-
-  bool get isKepala    => currentRole == 'kepala_sppg';
-  bool get isAslab     => currentRole == 'asisten_lapangan';
-  bool get isDriver    => currentRole == 'driver';
-  bool get isPIC       => currentRole == 'pic_sekolah';
+  String get phone => _userData?['phone'] as String? ?? '-';
 
   // ── Persistence ─────────────────────────────────────────
 
   Future<void> init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final userJson = prefs.getString(_keyUserData);
-      if (userJson == null) return;
-
-      final data = jsonDecode(userJson) as Map<String, dynamic>;
-      _userData = data;
-      _token = prefs.getString(_keyToken);
-      _currentRole = data['role'] as String? ?? 'kepala_sppg';
-      final sppgId = data['sppg_id']?.toString();
-      _apiClient.setAuthData(sppgId, _currentRole);
-      notifyListeners();
+      final savedUser = prefs.getString(_keyUserData);
+      if (savedUser != null) {
+        _userData = jsonDecode(savedUser) as Map<String, dynamic>;
+        _token = prefs.getString(_keyToken);
+        _currentRole = _userData!['role'] as String? ?? 'kepala_sppg';
+        final sId = (_userData!['sppg_id'] ?? _userData!['sppgId'])?.toString();
+        _apiClient.setAuthData(sId, _currentRole);
+        notifyListeners();
+      }
     } catch (_) {
       await _clearSession();
     }
@@ -152,6 +86,128 @@ class AuthProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  // ── Hardcoded roles + users (fallback / role switcher) ──
+
+  final List<RoleModel> roles = [
+    RoleModel(
+      id: 'kepala_sppg',
+      label: 'Kepala SPPG',
+      description: 'Monitoring & kontrol distribusi',
+      icon: TablerIcons.building,
+    ),
+    RoleModel(
+      id: 'asisten_lapangan',
+      label: 'Asisten Lapangan',
+      description: 'Validasi barang keluar & masuk',
+      icon: TablerIcons.package,
+    ),
+    RoleModel(
+      id: 'aslab',
+      label: 'Aslab / Pengantar',
+      description: 'Validasi barang keluar & masuk',
+      icon: TablerIcons.package,
+    ),
+    RoleModel(
+      id: 'driver',
+      label: 'Driver',
+      description: 'Pengiriman & tracking',
+      icon: TablerIcons.truck,
+    ),
+    RoleModel(
+      id: 'pic_sekolah',
+      label: 'PIC / Penerima',
+      description: 'Penerimaan di lokasi',
+      icon: TablerIcons.school,
+    ),
+    RoleModel(
+      id: 'superadmin',
+      label: 'Superadmin',
+      description: 'Akses penuh sistem',
+      icon: TablerIcons.shield_check,
+    ),
+    RoleModel(
+      id: 'accounting',
+      label: 'Accounting',
+      description: 'Laporan keuangan',
+      icon: TablerIcons.report,
+    ),
+    RoleModel(
+      id: 'supplier',
+      label: 'Supplier',
+      description: 'Manajemen pasokan',
+      icon: TablerIcons.truck_delivery,
+    ),
+    RoleModel(
+      id: 'pm',
+      label: 'PM / Penerima Manfaat',
+      description: 'Monitoring distribusi',
+      icon: TablerIcons.heart_handshake,
+    ),
+    RoleModel(
+      id: 'masyarakat',
+      label: 'Masyarakat / Wali Murid',
+      description: 'Ulasan & feedback penerimaan',
+      icon: TablerIcons.users,
+    ),
+  ];
+
+  final Map<String, UserModel> _mockUsers = {
+    'kepala_sppg':      UserModel(name: 'Petugas 01',     unit: 'SPPG Bandung Barat'),
+    'asisten_lapangan': UserModel(name: 'Asisten 01',     unit: 'Dapur SPPG'),
+    'aslab':            UserModel(name: 'Aslab 01',       unit: 'Dapur SPPG'),
+    'driver':           UserModel(name: 'Driver 01',      unit: 'Armada BGN-01'),
+    'pic_sekolah':      UserModel(name: 'Penerima 01',    unit: 'SDN 01'),
+    'superadmin':       UserModel(name: 'Superadmin',     unit: 'Dapur Pusat'),
+    'accounting':       UserModel(name: 'Akuntan 01',     unit: 'Kantor Pusat'),
+    'supplier':         UserModel(name: 'Supplier 01',    unit: 'PT Pangan Sejahtera'),
+    'pm':               UserModel(name: 'PM 01',        unit: 'Penerima Manfaat'),
+    'masyarakat':       UserModel(name: 'Wali Murid 01',  unit: 'SDN 01 Bandung'),
+  };
+
+  String _currentRole = 'kepala_sppg';
+
+  // ── Getters ─────────────────────────────────────────────
+
+  String get currentRole =>
+      _userData?['role'] as String? ?? _currentRole;
+
+  /// Role yang dikirim ke API header X-User-Role.
+  /// Untuk sementara asisten_lapangan pakai role kepala_sppg karena data
+  /// masih terpusat di sana.
+  String get apiRole =>
+      currentRole == 'asisten_lapangan' ? 'kepala_sppg' : currentRole;
+
+  RoleModel get activeRole {
+    try {
+      return roles.firstWhere((r) => r.id == currentRole);
+    } catch (_) {
+      return roles.first;
+    }
+  }
+
+  UserModel get activeUser {
+    if (_userData != null) {
+      return UserModel(
+        name: _userData!['name'] as String? ?? 'Pengguna',
+        unit: _userData!['location'] as String? ?? '-',
+      );
+    }
+    return _mockUsers.containsKey(currentRole)
+        ? _mockUsers[currentRole]!
+        : UserModel(name: 'Pengguna', unit: '-');
+  }
+
+  bool get isKepala           => currentRole == 'kepala_sppg';
+  bool get isAsistenLapangan  => currentRole == 'asisten_lapangan';
+  bool get isAslab            => currentRole == 'aslab';
+  bool get isDriver           => currentRole == 'driver';
+  bool get isPIC              => currentRole == 'pic_sekolah';
+  bool get isSuperadmin       => currentRole == 'superadmin';
+  bool get isAccounting       => currentRole == 'accounting';
+  bool get isSupplier         => currentRole == 'supplier';
+  bool get isPm               => currentRole == 'pm';
+  bool get isMasyarakat       => currentRole == 'masyarakat';
+
   // ── Role switcher (untuk demo) ─────────────────────────
 
   void switchRole(String roleId) {
@@ -174,18 +230,20 @@ class AuthProvider extends ChangeNotifier {
     try {
       final data = await _authService.login(email, password);
 
-      final userData = data['user'] as Map<String, dynamic>? ?? data;
-      _userData = userData;
+      if (data.containsKey('message') && !data.containsKey('token') && !data.containsKey('role')) {
+        loginError = data['message'] as String? ?? 'Email atau password salah';
+        return false;
+      }
+
+      _userData = data;
       _token = data['token'] as String?;
-      _currentRole = userData['role'] as String? ?? data['role'] as String? ?? 'kepala_sppg';
-
-      final sppgId = (userData['sppg_id'] ?? data['sppg_id'])?.toString();
-      _apiClient.setAuthData(sppgId, _currentRole);
-
+      _currentRole = data['role'] as String? ?? 'kepala_sppg';
+      final sId = (_userData!['sppg_id'] ?? _userData!['sppgId'])?.toString();
+      _apiClient.setAuthData(sId, _currentRole);
       await _saveSession();
       return true;
-    } catch (e) {
-      loginError = e.toString().replaceFirst('Exception: ', '');
+    } catch (_) {
+      loginError = 'Gagal terhubung ke server';
       return false;
     } finally {
       isLoading = false;
@@ -212,8 +270,8 @@ class AuthProvider extends ChangeNotifier {
     _userData = user;
     _token = token;
     _currentRole = user['role'] as String? ?? 'kepala_sppg';
-    final sppgId = user['sppg_id']?.toString();
-    _apiClient.setAuthData(sppgId, _currentRole);
+    final sId = (user['sppg_id'] ?? user['sppgId'])?.toString();
+    _apiClient.setAuthData(sId, _currentRole);
     notifyListeners();
   }
 }

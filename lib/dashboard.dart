@@ -11,6 +11,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:image/image.dart' as img;
+import 'package:go_router/go_router.dart';
 import 'chat_inbox_page.dart';
 import 'login.dart';
 import 'services/procurement_api.dart';
@@ -231,7 +232,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   MaterialPageRoute(
                     builder: (_) => const RencanaProduksiScreen(),
                   ),
-                )?.then((_) => _fetchOrders());
+                ).then((_) => _fetchOrders());
               },
               backgroundColor: const Color(0xFF4CAF50),
               icon: const Icon(Icons.factory_outlined, color: Colors.white),
@@ -427,7 +428,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: Colors.white.withOpacity(0.3),
                             width: 2,
                           ),
                         ),
@@ -450,7 +451,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       Text(
                         role,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: Colors.white.withOpacity(0.6),
                           fontSize: 13,
                         ),
                       ),
@@ -486,7 +487,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Builder(
               builder: (ctx) {
                 final role = ctx.watch<AuthProvider>().currentRole;
-                if (role != 'kepala_sppg' && role != 'asisten_lapangan') return const SizedBox.shrink();
+                if (role != 'aslab') return const SizedBox.shrink();
                 return Column(
                   children: [
                     ListTile(
@@ -525,14 +526,28 @@ class _DashboardPageState extends State<DashboardPage> {
                 borderRadius: BorderRadius.circular(8),
               ),
               onTap: () async {
-                await context.read<AuthProvider>().logout();
-                if (!context.mounted) return;
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MyHomePageMyWidget(),
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Konfirmasi'),
+                    content: const Text('Apakah Anda yakin ingin logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Tidak'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Ya'),
+                      ),
+                    ],
                   ),
                 );
+                if (confirmed != true) return;
+                if (!context.mounted) return;
+                await context.read<AuthProvider>().logout();
+                if (!context.mounted) return;
+                context.go('/login-legacy');
               },
             ),
             const SizedBox(height: 16),
@@ -709,7 +724,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
+                color: Colors.white.withOpacity(0.03),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -743,7 +758,7 @@ class _DashboardPageState extends State<DashboardPage> {
         decoration: BoxDecoration(
           color: const Color.fromARGB(255, 30, 30, 30),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.15)),
+          border: Border.all(color: color.withOpacity(0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -755,7 +770,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   width: 22,
                   height: 22,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
+                    color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(icon, color: color, size: 12),
@@ -894,7 +909,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         vertical: 1,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -1371,10 +1386,10 @@ class _DashboardPageState extends State<DashboardPage> {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.1),
+                              color: statusColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: statusColor.withValues(alpha: 0.2),
+                                color: statusColor.withOpacity(0.2),
                               ),
                             ),
                             child: Row(
@@ -1403,7 +1418,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         ],
                       ),
                     ),
-                    if (role != 'accounting')
+                    if (role == 'mitra')
                       PopupMenuButton<String>(
                         onSelected: (value) =>
                             _handleStatusChange(orderId, value),

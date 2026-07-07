@@ -180,9 +180,9 @@ class _InspectionPageState extends State<InspectionPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: gradeColor.withValues(alpha: 0.15),
+                    color: gradeColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: gradeColor.withValues(alpha: 0.4)),
+                    border: Border.all(color: gradeColor.withOpacity(0.4)),
                   ),
                   child: Text(
                     'Grade $grade',
@@ -193,7 +193,7 @@ class _InspectionPageState extends State<InspectionPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
+                    color: statusColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

@@ -1,10 +1,7 @@
 import 'package:bgn/distribusi/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'main_page.dart';
-import 'dashboard_supp.dart';
 import 'draft_store.dart';
-import 'pilih_menu.dart';
 
 class MyHomePageMyWidget extends StatefulWidget {
   const MyHomePageMyWidget({super.key});
@@ -19,43 +16,6 @@ class _MyHomePageMyWidgetState extends State<MyHomePageMyWidget> {
   TextEditingController emailController = TextEditingController();
   bool _isVisible = false;
   bool rememberMe = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final auth = context.read<AuthProvider>();
-      if (auth.isLoggedIn) {
-        _redirect(auth);
-      }
-    });
-  }
-
-  void _redirect(AuthProvider auth) {
-    final role = auth.currentRole;
-    Widget destination;
-
-    if (role == 'kepala_sppg' || role == 'asisten_lapangan' || role == 'aslab') {
-      if (role == 'asisten_lapangan') {
-        auth.switchRole('aslab');
-      }
-      destination = const PilihMenuPage();
-    } else if (role == 'supplier') {
-      DraftStore.loggedInUser = auth.activeUser.name;
-      DraftStore.loggedInRole = 'Supplier';
-      destination = const DashboardSuppPage();
-    } else {
-      DraftStore.loggedInUser = auth.activeUser.name;
-      DraftStore.loggedInRole = 'Petugas SPPG';
-      destination = const MainPage();
-    }
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => destination),
-    );
-  }
 
   @override
   void dispose() {
@@ -85,9 +45,16 @@ class _MyHomePageMyWidgetState extends State<MyHomePageMyWidget> {
       return;
     }
 
-    if (!mounted) return;
-
-    _redirect(auth);
+    final role = auth.currentRole;
+    if (role == 'asisten_lapangan') {
+      auth.switchRole('aslab');
+    } else if (role == 'supplier') {
+      DraftStore.loggedInUser = auth.activeUser.name;
+      DraftStore.loggedInRole = 'Supplier';
+    } else if (role != 'kepala_sppg' && role != 'aslab') {
+      DraftStore.loggedInUser = auth.activeUser.name;
+      DraftStore.loggedInRole = 'Petugas SPPG';
+    }
   }
 
   @override

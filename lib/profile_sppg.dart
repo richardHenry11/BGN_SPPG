@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'checkout_page.dart';
@@ -109,7 +110,7 @@ class _ProfileSppgPageState extends State<ProfileSppgPage> {
               const Icon(Icons.location_on, color: Color.fromARGB(255, 133, 133, 133), size: 16),
               const SizedBox(width: 4),
               Text(
-                'Jakarta Pusat, DKI Jakarta',
+                context.watch<AuthProvider>().activeUser.unit,
                 style: const TextStyle(
                   color: Color.fromARGB(255, 176, 176, 176),
                   fontSize: 13,
@@ -411,11 +412,11 @@ class _ProfileSppgPageState extends State<ProfileSppgPage> {
         children: [
           _infoRow(MaterialCommunityIcons.badge_account, 'NIP', '199003102022011001'),
           const Divider(color: Color.fromARGB(255, 60, 60, 60), height: 20),
-          _infoRow(Icons.business, 'Instansi', 'SPPG Jakarta Pusat'),
+          _infoRow(Icons.business, 'Instansi', context.watch<AuthProvider>().activeUser.unit),
           const Divider(color: Color.fromARGB(255, 60, 60, 60), height: 20),
           _infoRow(Icons.email_outlined, 'Email', DraftStore.loggedInUser),
           const Divider(color: Color.fromARGB(255, 60, 60, 60), height: 20),
-          _infoRow(Icons.phone_outlined, 'Telepon', '021-12345678'),
+          _infoRow(Icons.phone_outlined, 'Telepon', context.watch<AuthProvider>().phone),
         ],
       ),
     );
@@ -523,14 +524,28 @@ class _ProfileSppgPageState extends State<ProfileSppgPage> {
           _menuTile(Icons.help_outline, 'Pusat Bantuan', () {}),
           _menuBorder(),
           _menuTile(Icons.logout, 'Keluar', () async {
-            await context.read<AuthProvider>().logout();
-            if (!context.mounted) return;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const MyHomePageMyWidget(),
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Konfirmasi'),
+                content: const Text('Apakah Anda yakin ingin logout?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Tidak'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Ya'),
+                  ),
+                ],
               ),
             );
+            if (confirmed != true) return;
+            if (!context.mounted) return;
+            await context.read<AuthProvider>().logout();
+            if (!context.mounted) return;
+            context.go('/login-legacy');
           }),
         ],
       ),

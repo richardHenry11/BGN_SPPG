@@ -4,6 +4,7 @@
 //   List (expandable cards → status grid → "Buat laporan kondisi")
 //   Form (counter inputs → checkboxes → foto → submit)
 
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:provider/provider.dart';
@@ -57,13 +58,13 @@ class _TabPackingState extends State<TabPacking> {
 
   // ── Computed ─────────────────────────────────────────────
 
-  int get _totalSelesai =>
+  int get _totalSudahQc =>
       _packingList.where((p) => p['delivery_status'] == 'Selesai').length;
 
-  int get _totalBelum =>
+  int get _totalBelumQc =>
       _packingList.where((p) => p['delivery_status'] != 'Selesai').length;
 
-  bool get _siapLoading => _totalBelum == 0 && _packingList.isNotEmpty;
+  bool get _siapLoading => _totalBelumQc == 0 && _packingList.isNotEmpty;
 
   bool get _adaMasalah =>
       _fallenBrokenQty > 0 ||
@@ -80,12 +81,24 @@ class _TabPackingState extends State<TabPacking> {
     return parts.join(', ');
   }
 
+  Map<String, String> _authHeaders() {
+    final auth = context.read<AuthProvider>();
+    final h = <String, String>{
+      'X-User-Role': auth.apiRole,
+    };
+    if (auth.token != null) h['Authorization'] = 'Bearer ${auth.token}';
+    if (auth.sppgId != null) h['X-User-Sppg-Id'] = auth.sppgId.toString();
+    return h;
+  }
+
   // ── Lifecycle ────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
-    _fetchPackingList();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _fetchPackingList();
+    });
   }
 
   // ── API: Fetch list ──────────────────────────────────────
@@ -97,7 +110,7 @@ class _TabPackingState extends State<TabPacking> {
       _error = null;
     });
     try {
-      final data = await _packagingService.getList();
+      final data = await _packagingService.getList(headers: _authHeaders());
       if (!mounted) return;
       setState(() {
       _packingList = data..sort((a, b) {
@@ -119,7 +132,7 @@ class _TabPackingState extends State<TabPacking> {
   void _openForm(Map<String, dynamic> packing) {
     setState(() {
       _formPacking = packing;
-      _formPackingId = packing['id'] as int;
+      _formPackingId = (packing['id'] as num?)?.toInt();
       _viewMode = _ViewMode.form;
       _resetForm();
       _fallenBrokenQty = packing['fallen_broken_qty'] ?? 0;
@@ -167,6 +180,15 @@ class _TabPackingState extends State<TabPacking> {
     });
   }
 
+  void _toggleExpanded(int id) {
+    setState(() => _expandedId = _expandedId == id ? null : id);
+  }
+
+  void _toggleDamagedLabel() => setState(() => _damagedLabelCheck = !_damagedLabelCheck);
+  void _toggleDamagedSeal() => setState(() => _damagedSealCheck = !_damagedSealCheck);
+
+  String _petugasName() => context.read<AuthProvider>().activeUser.name;
+
   // ── Foto handling ────────────────────────────────────────
 
   void _handleFotoUpdate(FotoBuktiData? data) {
@@ -187,7 +209,7 @@ class _TabPackingState extends State<TabPacking> {
       _errorMsg = null;
     });
     try {
-      final url = await _packagingService.uploadPhoto(filePath);
+      final url = await _packagingService.uploadPhoto(filePath, headers: _authHeaders());
       if (!mounted) return;
       setState(() {
         _compliancePhotoUrl = url;
@@ -222,12 +244,12 @@ class _TabPackingState extends State<TabPacking> {
         'compliance_photo_url': _compliancePhotoUrl,
       };
 
-      await _packagingService.update(_formPackingId.toString(), payload);
+      await _packagingService.update(_formPackingId!.toString(), payload, headers: _authHeaders());
 
       if (!mounted) return;
       setState(() => _submitSuccess = true);
       // Update item di list lokal — tidak perlu re-fetch seluruh list
-      final idx = _packingList.indexWhere((p) => (p['id'] as int) == _formPackingId);
+      final idx = _packingList.indexWhere((p) => (p['id'] as num?)?.toInt() == _formPackingId);
       if (idx != -1) {
         _packingList[idx] = payload;
       }
@@ -270,260 +292,70 @@ class _TabPackingState extends State<TabPacking> {
 
   @override
   Widget build(BuildContext context) {
-    if (_viewMode == _ViewMode.form) return _buildFormView();
+    if (_viewMode == _ViewMode.form) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: _buildFormView(),
+      );
+    }
     return _buildListView();
   }
 
   // ── List View (ValidasiPacking) ──────────────────────────
 
   Widget _buildListView() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Header ──
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: BGNColors.primaryLight,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Validasi & Check Packing',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: BGNColors.primary,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: BGNColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: const Text(
-                      'Alur 3',
-                      style:
-                          TextStyle(fontSize: 9, color: BGNColors.primary),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Pastikan semua packing sudah sesuai sebelum loading ke kendaraan',
-                style: TextStyle(fontSize: 10, color: BGNColors.primary),
-              ),
-            ],
-          ),
+    if (_loading) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: List.generate(3, (_) => _LoadingSkeleton()),
         ),
-        const SizedBox(height: 14),
+      );
+    }
 
-        // ── Loading ──
-        if (_loading)
-          ...List.generate(3, (_) => _LoadingSkeleton())
-
-        // ── Error ──
-        else if (_error != null)
-          _ErrorCard(
-            message: _error!,
-            onRetry: _fetchPackingList,
-          )
-
-        // ── List ──
-        else if (_packingList.isEmpty)
-          _EmptyState()
-
-        else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _packingList.length,
-            itemBuilder: (_, i) => _buildPackingCard(i),
-          ),
-
-        // ── Summary ──
-        if (!_loading && _error == null && _packingList.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          _buildSummary(),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildPackingCard(int index) {
-    final packing = _packingList[index];
-    final id = packing['id'] as int;
-    final isExpanded = _expandedId == id;
-    final statusSelesai = packing['delivery_status'] == 'Selesai';
-    final route =
-        packing['delivery_route'] as String? ?? 'Rute belum ditentukan';
-    final target = (packing['target_portions'] as num?)?.toInt() ?? 0;
-    final actual = (packing['actual_portions'] as num?)?.toInt() ?? 0;
-    final effectiveness =
-        (packing['effectiveness'] as num?)?.toDouble() ?? 0.0;
-    final fbQty = (packing['fallen_broken_qty'] as num?)?.toInt() ?? 0;
-    final missQty = (packing['missing_qty'] as num?)?.toInt() ?? 0;
-    final labelRusak = packing['damaged_label_check'] ?? false;
-    final segelRusak = packing['damaged_seal_check'] ?? false;
-    final aslab =
-        packing['field_assistant'] as String? ?? '-';
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: BGNColors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isExpanded
-              ? BGNColors.primary.withValues(alpha: 0.3)
-              : BGNColors.border,
+    if (_error != null) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: _ErrorCard(
+          message: _error!,
+          onRetry: _fetchPackingList,
         ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── Header (clickable) ──
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => setState(() {
-                _expandedId = isExpanded ? null : id;
-              }),
-              borderRadius: BorderRadius.vertical(
-                top: const Radius.circular(14),
-                bottom: isExpanded ? Radius.zero : const Radius.circular(14),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
-                child: Row(
-                  children: [
-                    // Icon
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: statusSelesai
-                            ? BGNColors.primaryLight
-                            : BGNColors.background,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        statusSelesai
-                            ? TablerIcons.circle_check
-                            : TablerIcons.package,
-                        size: 16,
-                        color: statusSelesai
-                            ? BGNColors.primary
-                            : BGNColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Route + info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            route,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: BGNColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '$target porsi · ${_formatTanggal(packing['timestamp'] as String?)}',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: BGNColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Status badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: statusSelesai
-                            ? BGNColors.primaryLight
-                            : BGNColors.background,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        statusSelesai ? 'Selesai' : 'Belum',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: statusSelesai
-                              ? BGNColors.primary
-                              : BGNColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    AnimatedRotation(
-                      duration: const Duration(milliseconds: 200),
-                      turns: isExpanded ? 0.5 : 0.0,
-                      child: const Icon(
-                        TablerIcons.chevron_down,
-                        size: 16,
-                        color: BGNColors.textHint,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+      );
+    }
+
+    if (_packingList.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: _EmptyState(),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _packingList.length + 1,
+      itemBuilder: (_, i) {
+        if (i < _packingList.length) {
+          final packing = _packingList[i];
+          final id = (packing['id'] as num?)?.toInt() ?? 0;
+          return RepaintBoundary(
+            child: _PackingCard(
+              key: ValueKey(id),
+              packing: packing,
+              id: id,
+              isExpanded: _expandedId == id,
+              onToggle: _toggleExpanded,
+              onOpenForm: _openForm,
+              formatJam: _formatJam,
+              formatTanggal: _formatTanggal,
             ),
-          ),
-
-          // ── Expanded detail ──
-          AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: isExpanded
-                ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Divider(height: 1, color: BGNColors.border),
-                      _ExpandedDetail(
-                        packing: packing,
-                        target: target,
-                        actual: actual,
-                        effectiveness: effectiveness,
-                        fbQty: fbQty,
-                        missQty: missQty,
-                        labelRusak: labelRusak,
-                        segelRusak: segelRusak,
-                        aslab: aslab,
-                        statusSelesai: statusSelesai,
-                        formatJam: _formatJam,
-                        onOpenForm: _openForm,
-                      ),
-                    ],
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
-      ),
+          );
+        }
+        return Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: _buildSummary(),
+        );
+      },
     );
   }
 
@@ -532,7 +364,7 @@ class _TabPackingState extends State<TabPacking> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: BGNColors.white,
+        color: BGNColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: BGNColors.border),
       ),
@@ -551,15 +383,15 @@ class _TabPackingState extends State<TabPacking> {
           Row(
             children: [
               _SummaryBox(
-                label: 'Selesai',
-                value: '$_totalSelesai',
+                label: 'Sudah QC',
+                value: '$_totalSudahQc',
                 bgColor: BGNColors.primaryLight,
                 textColor: BGNColors.primary,
               ),
               const SizedBox(width: 8),
               _SummaryBox(
-                label: 'Belum',
-                value: '$_totalBelum',
+                label: 'Belum QC',
+                value: '$_totalBelumQc',
                 bgColor: BGNColors.background,
                 textColor: BGNColors.textSecondary,
               ),
@@ -598,8 +430,8 @@ class _TabPackingState extends State<TabPacking> {
                 Expanded(
                   child: Text(
                     _siapLoading
-                        ? 'Semua packing selesai — siap loading ke kendaraan'
-                        : '$_totalBelum packing belum selesai',
+                        ? 'Semua packing sudah di-QC — siap loading ke kendaraan'
+                        : '$_totalBelumQc packing belum di-QC',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -652,7 +484,7 @@ class _TabPackingState extends State<TabPacking> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: BGNColors.white,
+            color: BGNColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: BGNColors.border),
           ),
@@ -668,18 +500,16 @@ class _TabPackingState extends State<TabPacking> {
               const SizedBox(height: 16),
 
               // Kondisi section
-              _KondisiSection(
-                fallenBrokenQty: _fallenBrokenQty,
-                missingQty: _missingQty,
-                damagedLabelCheck: _damagedLabelCheck,
-                damagedSealCheck: _damagedSealCheck,
-                onIncrement: _increment,
-                onDecrement: _decrement,
-                onDamagedLabelToggle: () =>
-                    setState(() => _damagedLabelCheck = !_damagedLabelCheck),
-                onDamagedSealToggle: () =>
-                    setState(() => _damagedSealCheck = !_damagedSealCheck),
-              ),
+               _KondisiSection(
+                 fallenBrokenQty: _fallenBrokenQty,
+                 missingQty: _missingQty,
+                 damagedLabelCheck: _damagedLabelCheck,
+                 damagedSealCheck: _damagedSealCheck,
+                 onIncrement: _increment,
+                 onDecrement: _decrement,
+                 onDamagedLabelToggle: _toggleDamagedLabel,
+                 onDamagedSealToggle: _toggleDamagedSeal,
+               ),
               const SizedBox(height: 16),
 
               // Foto
@@ -687,6 +517,7 @@ class _TabPackingState extends State<TabPacking> {
                   onFotoUpdate: _handleFotoUpdate,
                   isUploadingFoto: _isUploadingFoto,
                   fotoSudahUpload: _fotoSudahUpload,
+                  petugas: _petugasName(),
                 ),
                 const SizedBox(height: 16),
 
@@ -721,6 +552,189 @@ class _TabPackingState extends State<TabPacking> {
             ),
           ),
       ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PackingCard
+// ═══════════════════════════════════════════════════════════
+
+class _PackingCard extends StatelessWidget {
+  final Map<String, dynamic> packing;
+  final int id;
+  final bool isExpanded;
+  final ValueSetter<int> onToggle;
+  final void Function(Map<String, dynamic>) onOpenForm;
+  final String Function(String?) formatJam;
+  final String Function(String?) formatTanggal;
+
+  const _PackingCard({
+    super.key,
+    required this.packing,
+    required this.id,
+    required this.isExpanded,
+    required this.onToggle,
+    required this.onOpenForm,
+    required this.formatJam,
+    required this.formatTanggal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sudahQc = packing['delivery_status'] == 'Selesai';
+    final lokasi = packing['beneficiary_name'] as String? ??
+        packing['delivery_route'] as String? ?? '';
+    final menu = packing['menu_name'] as String? ?? '';
+    final target = (packing['target_portions'] as num?)?.toInt() ?? 0;
+    final actual = (packing['actual_portions'] as num?)?.toInt() ?? 0;
+    final effectiveness =
+        (packing['effectiveness'] as num?)?.toDouble() ?? 0.0;
+    final fbQty = (packing['fallen_broken_qty'] as num?)?.toInt() ?? 0;
+    final missQty = (packing['missing_qty'] as num?)?.toInt() ?? 0;
+    final labelRusak = packing['damaged_label_check'] ?? false;
+    final segelRusak = packing['damaged_seal_check'] ?? false;
+    final aslab =
+        packing['field_assistant'] as String? ?? '-';
+    final statusSelesai = packing['delivery_status'] == 'Selesai';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: BGNColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isExpanded
+              ? BGNColors.primary.withOpacity(0.3)
+              : BGNColors.border,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () => onToggle(id),
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 12),
+              child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: sudahQc
+                            ? BGNColors.primaryLight
+                            : BGNColors.background,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        sudahQc
+                            ? TablerIcons.circle_check
+                            : TablerIcons.package,
+                        size: 16,
+                        color: sudahQc
+                            ? BGNColors.primary
+                            : BGNColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (lokasi.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 2),
+                              child: Text(
+                                lokasi,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: BGNColors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          Text(
+                            menu,
+                            style: TextStyle(
+                              fontSize: lokasi.isNotEmpty ? 10 : 12,
+                              fontWeight: lokasi.isNotEmpty ? FontWeight.normal : FontWeight.w500,
+                              color: lokasi.isNotEmpty ? BGNColors.textHint : BGNColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$target porsi · ${formatTanggal(packing['timestamp'] as String?)}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: BGNColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: sudahQc
+                            ? BGNColors.primaryLight
+                            : BGNColors.background,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        sudahQc ? 'Sudah QC' : 'Belum QC',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: sudahQc
+                              ? BGNColors.primary
+                              : BGNColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Transform.rotate(
+                      angle: isExpanded ? math.pi : 0,
+                        child: const Icon(
+                          TablerIcons.chevron_down,
+                          size: 16,
+                          color: BGNColors.textHint,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          if (isExpanded) Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Divider(height: 1, color: BGNColors.border),
+                      _ExpandedDetail(
+                        packing: packing,
+                        target: target,
+                        actual: actual,
+                        effectiveness: effectiveness,
+                        fbQty: fbQty,
+                        missQty: missQty,
+                        labelRusak: labelRusak,
+                        segelRusak: segelRusak,
+                        aslab: aslab,
+                        statusSelesai: statusSelesai,
+                        formatJam: formatJam,
+                        onOpenForm: onOpenForm,
+                      ),
+                    ],
+                  )
+        ],
+      ),
     );
   }
 }
@@ -916,7 +930,7 @@ class _HeaderInfo extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: BGNColors.primary.withValues(alpha: 0.15),
+                  color: BGNColors.primary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: const Text(
@@ -930,17 +944,17 @@ class _HeaderInfo extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: BGNColors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Target porsi',
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: BGNColors.surface,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Target porsi',
                         style: TextStyle(
                           fontSize: 9,
                           color: BGNColors.textSecondary,
@@ -964,7 +978,7 @@ class _HeaderInfo extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: BGNColors.white,
+                    color: BGNColors.surface,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Column(
@@ -1135,7 +1149,7 @@ class _CounterField extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: hasProblem ? BGNColors.dangerLight : BGNColors.white,
+                  color: hasProblem ? BGNColors.dangerLight : BGNColors.surface,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: hasProblem
@@ -1205,11 +1219,10 @@ class _CheckboxRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onToggle,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: checked ? BGNColors.dangerLight : BGNColors.white,
+          color: checked ? BGNColors.dangerLight : BGNColors.surface,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: checked ? const Color(0xFFFCA5A5) : BGNColors.border,
@@ -1218,8 +1231,7 @@ class _CheckboxRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
+            Container(
               width: 20,
               height: 20,
               decoration: BoxDecoration(
@@ -1231,9 +1243,9 @@ class _CheckboxRow extends StatelessWidget {
                 ),
               ),
               child: checked
-                  ? const Icon(TablerIcons.check,
-                      size: 14, color: Colors.white)
-                  : null,
+                ? const Icon(TablerIcons.check,
+                    size: 14, color: Colors.white)
+                : null,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -1275,17 +1287,17 @@ class _FotoSection extends StatelessWidget {
   final Function(FotoBuktiData?) onFotoUpdate;
   final bool isUploadingFoto;
   final bool fotoSudahUpload;
+  final String petugas;
 
   const _FotoSection({
     required this.onFotoUpdate,
     required this.isUploadingFoto,
     required this.fotoSudahUpload,
+    required this.petugas,
   });
 
   @override
   Widget build(BuildContext context) {
-    final petugas = context.watch<AuthProvider>().activeUser.name;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1503,7 +1515,7 @@ class _LoadingSkeleton extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: BGNColors.white,
+        color: BGNColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: BGNColors.border),
       ),

@@ -186,7 +186,7 @@ class _TrackingPageState extends State<TrackingPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.95),
+                        color: Colors.white.withOpacity(0.95),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -212,7 +212,7 @@ class _TrackingPageState extends State<TrackingPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: Colors.white.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text('Kurir', style: TextStyle(color: Color(0xFF1A8FCC), fontSize: 9, fontWeight: FontWeight.w600)),
@@ -1118,10 +1118,10 @@ class _TrackingPageState extends State<TrackingPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: selected ? fillColor.withValues(alpha: 0.15) : const Color.fromARGB(255, 30, 30, 30),
+                  color: selected ? fillColor.withOpacity(0.15) : const Color.fromARGB(255, 30, 30, 30),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: selected ? borderColor.withValues(alpha: 0.6) : const Color.fromARGB(255, 50, 50, 50),
+                    color: selected ? borderColor.withOpacity(0.6) : const Color.fromARGB(255, 50, 50, 50),
                   ),
                 ),
                 child: Column(
@@ -1266,7 +1266,7 @@ class _FakeMapPainter extends CustomPainter {
     canvas.drawPath(path, routePaint);
 
     final dashPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.2)
+      ..color = Colors.white.withOpacity(0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     for (int x = 0; x < size.width; x += 30) {
@@ -1277,11 +1277,11 @@ class _FakeMapPainter extends CustomPainter {
     }
 
     final pulsePaint = Paint()
-      ..color = Colors.red.withValues(alpha: 0.15)
+      ..color = Colors.red.withOpacity(0.15)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(size.width * 0.62, size.height * 0.40), 28, pulsePaint);
     final pulsePaint2 = Paint()
-      ..color = Colors.red.withValues(alpha: 0.08)
+      ..color = Colors.red.withOpacity(0.08)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(size.width * 0.62, size.height * 0.40), 40, pulsePaint2);
   }

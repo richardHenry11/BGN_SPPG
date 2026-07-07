@@ -3,7 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bgn/distribusi/theme/colors.dart';
+import 'package:bgn/distribusi/providers/auth_provider.dart';
 import 'package:bgn/distribusi/providers/distribusi_provider.dart';
 import 'package:bgn/distribusi/providers/jadwal_provider.dart';
 import 'package:bgn/distribusi/widgets/common/car_refresh_indicator.dart';
@@ -14,6 +16,9 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    if (auth.isMasyarakat) return _MasyarakatDashboard();
+
     return CarRefreshIndicator(
       onRefresh: () async {
         await Future.wait([
@@ -83,7 +88,7 @@ class DashboardScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: BGNColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: BGNColors.border),
             ),
@@ -182,7 +187,7 @@ class DashboardScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: BGNColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: BGNColors.border),
             ),
@@ -340,5 +345,161 @@ class _AktivitasItem extends StatelessWidget {
           'bgColor': BGNColors.background,
         };
     }
+  }
+}
+
+// ── Masyarakat Dashboard ───────────────────────────────────
+
+class _MasyarakatDashboard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const SizedBox(height: 24),
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: BGNColors.primaryLight,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: const Icon(
+              TablerIcons.heart_handshake,
+              color: BGNColors.primary,
+              size: 36,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            auth.activeUser.name,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: BGNColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            auth.activeUser.unit,
+            style: const TextStyle(
+              fontSize: 13,
+              color: BGNColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1A73E8), Color(0xFF1557B0)],
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Beri Ulasan Penerimaan',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Sampaikan pendapat Anda tentang kualitas makanan yang diterima',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.push('/ulasan'),
+                    icon: const Icon(TablerIcons.edit, size: 18),
+                    label: const Text('Beri Ulasan Sekarang'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: BGNColors.surface,
+                      foregroundColor: const Color(0xFF1A73E8),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: BGNColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: BGNColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Informasi',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: BGNColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _InfoRow(
+                  icon: TablerIcons.clock,
+                  text: 'Pengiriman hari ini: 12 sekolah',
+                ),
+                const SizedBox(height: 8),
+                _InfoRow(
+                  icon: TablerIcons.truck,
+                  text: 'Armada beroperasi: 4 unit',
+                ),
+                const SizedBox(height: 8),
+                _InfoRow(
+                  icon: TablerIcons.school,
+                  text: 'Total penerima: 2.400 porsi',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _InfoRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: BGNColors.primary),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            color: BGNColors.textSecondary,
+          ),
+        ),
+      ],
+    );
   }
 }

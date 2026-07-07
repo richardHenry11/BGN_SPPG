@@ -28,7 +28,7 @@ class KomplainCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: BGNColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: BGNColors.border),
       ),

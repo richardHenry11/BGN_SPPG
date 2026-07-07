@@ -24,6 +24,7 @@ class _CarRefreshIndicatorState extends State<CarRefreshIndicator> {
   static const double _maxPull = 80;
 
   bool _onScroll(ScrollNotification notification) {
+    if (!mounted) return false;
     if (_isRefreshing) return true;
 
     // Handle bouncing scroll physics (iOS)

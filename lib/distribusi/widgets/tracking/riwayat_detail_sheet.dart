@@ -22,10 +22,13 @@ class _RiwayatDetailSheetState extends State<RiwayatDetailSheet> {
   @override
   void initState() {
     super.initState();
-    _fetch();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _fetch();
+    });
   }
 
   Future<void> _fetch() async {
+    if (!mounted) return;
     setState(() { _loading = true; _error = null; });
     try {
       _data = await _packagingService.getDetail(widget.id.toString());
@@ -43,7 +46,7 @@ class _RiwayatDetailSheetState extends State<RiwayatDetailSheet> {
       maxChildSize: 0.95,
       builder: (_, scrollController) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: BGNColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -160,7 +163,7 @@ class _RiwayatDetailSheetState extends State<RiwayatDetailSheet> {
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: BGNColors.white,
+          color: BGNColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: BGNColors.border),
         ),
@@ -185,7 +188,7 @@ class _RiwayatDetailSheetState extends State<RiwayatDetailSheet> {
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: BGNColors.white,
+          color: BGNColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: BGNColors.border),
         ),
@@ -213,7 +216,7 @@ class _RiwayatDetailSheetState extends State<RiwayatDetailSheet> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: BGNColors.white,
+            color: BGNColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: BGNColors.border),
           ),
@@ -247,7 +250,7 @@ class _RiwayatDetailSheetState extends State<RiwayatDetailSheet> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(reviewFoto, height: 160, width: double.infinity,
-                      fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                      fit: BoxFit.cover, cacheWidth: 320, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
                 ),
               ],
             ],
@@ -266,7 +269,7 @@ class _RiwayatDetailSheetState extends State<RiwayatDetailSheet> {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(fotoBukti, height: 160, width: double.infinity,
-                  fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                  fit: BoxFit.cover, cacheWidth: 320, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
             ),
           ],
         ),

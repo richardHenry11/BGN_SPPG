@@ -27,7 +27,7 @@ class MainLayout extends StatelessWidget {
     return PreferredSize(
       preferredSize: const Size.fromHeight(kToolbarHeight + 8),
       child: AppBar(
-        backgroundColor: BGNColors.primary,
+        backgroundColor: BGNColors.surface,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -35,7 +35,7 @@ class MainLayout extends StatelessWidget {
               auth.activeRole.label,
               style: const TextStyle(
                 fontSize: 11,
-                color: Color(0xFFBFDBFE),
+                color: BGNColors.textSecondary,
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -43,7 +43,7 @@ class MainLayout extends StatelessWidget {
               auth.activeUser.name,
               style: const TextStyle(
                 fontSize: 14,
-                color: Colors.white,
+                color: BGNColors.textPrimary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -51,7 +51,7 @@ class MainLayout extends StatelessWidget {
               auth.activeUser.unit,
               style: const TextStyle(
                 fontSize: 11,
-                color: Color(0xFFBFDBFE),
+                color: BGNColors.textSecondary,
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -60,24 +60,41 @@ class MainLayout extends StatelessWidget {
         actions: [
           TextButton.icon(
             onPressed: () async {
-              await context.read<AuthProvider>().logout();
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Konfirmasi'),
+                  content: const Text('Apakah Anda yakin ingin logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Tidak'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Ya'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed != true) return;
               if (!context.mounted) return;
-              context.go('/login');
+              context.read<AuthProvider>().logout();
             },
             icon: const Icon(
               TablerIcons.logout,
-              color: Colors.white,
+              color: BGNColors.textSecondary,
               size: 16,
             ),
             label: const Text(
               'Logout',
               style: TextStyle(
-                color: Colors.white,
+                color: BGNColors.textSecondary,
                 fontSize: 12,
               ),
             ),
             style: TextButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              backgroundColor: BGNColors.surfaceAlt,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -94,11 +111,12 @@ class MainLayout extends StatelessWidget {
   }
 
   static const _allNavItems = [
-    AnimatedNavItem(path: '/',            icon: TablerIcons.home,          activeIcon: TablerIcons.home,             label: 'Beranda',  roles: ['kepala_sppg', 'aslab', 'driver', 'pic_sekolah']),
-    AnimatedNavItem(path: '/pengiriman',  icon: TablerIcons.package,        activeIcon: TablerIcons.package,           label: 'Kirim',    roles: ['kepala_sppg', 'aslab']),
-    AnimatedNavItem(path: '/rute',        icon: TablerIcons.map,            activeIcon: TablerIcons.map,               label: 'Rute',     roles: ['kepala_sppg', 'driver']),
-    AnimatedNavItem(path: '/tracking',    icon: TablerIcons.truck,          activeIcon: TablerIcons.truck,             label: 'Tracking', roles: ['kepala_sppg', 'aslab', 'driver', 'pic_sekolah']),
-    AnimatedNavItem(path: '/laporan',     icon: TablerIcons.chart_bar,      activeIcon: TablerIcons.chart_bar,         label: 'Laporan',  roles: ['kepala_sppg', 'pic_sekolah']),
+    AnimatedNavItem(path: '/',            icon: TablerIcons.home,          activeIcon: TablerIcons.home,             label: 'Beranda',  roles: ['kepala_sppg', 'asisten_lapangan', 'aslab', 'driver', 'pic_sekolah', 'superadmin', 'accounting', 'supplier', 'pm', 'masyarakat']),
+    AnimatedNavItem(path: '/pengiriman',  icon: TablerIcons.package,        activeIcon: TablerIcons.package,           label: 'Kirim',    roles: ['kepala_sppg','asisten_lapangan', 'aslab', 'supplier', 'superadmin']),
+    AnimatedNavItem(path: '/rute',        icon: TablerIcons.map,            activeIcon: TablerIcons.map,               label: 'Rute',     roles: ['asisten_lapangan', 'driver', 'superadmin']),
+    AnimatedNavItem(path: '/tracking',    icon: TablerIcons.truck,          activeIcon: TablerIcons.truck,             label: 'Tracking', roles: ['kepala_sppg', 'asisten_lapangan', 'aslab', 'driver', 'pic_sekolah', 'superadmin', 'accounting', 'supplier', 'pm']),
+    AnimatedNavItem(path: '/laporan',     icon: TablerIcons.chart_bar,      activeIcon: TablerIcons.chart_bar,         label: 'Laporan',  roles: ['kepala_sppg', 'pic_sekolah', 'accounting', 'superadmin', 'pm']),
+    AnimatedNavItem(path: '/setting',    icon: TablerIcons.settings,        activeIcon: TablerIcons.settings,          label: 'Setting',  roles: ['kepala_sppg']),
   ];
 
   Widget _buildBottomNav(BuildContext context) {

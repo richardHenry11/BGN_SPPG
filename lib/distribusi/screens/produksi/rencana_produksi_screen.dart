@@ -341,7 +341,7 @@ class _RencanaProduksiScreenState extends State<RencanaProduksiScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primary,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: _primary.withValues(alpha: 0.3),
+                disabledBackgroundColor: _primary.withOpacity(0.3),
                 disabledForegroundColor: Colors.white38,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -406,7 +406,7 @@ class _RencanaProduksiScreenState extends State<RencanaProduksiScreen> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: _primary.withValues(alpha: 0.12),
+              color: _primary.withOpacity(0.12),
               borderRadius: BorderRadius.circular(_radiusSm),
             ),
             child: Icon(icon, size: 16, color: _primary),
@@ -518,7 +518,7 @@ class _RencanaProduksiScreenState extends State<RencanaProduksiScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _primary,
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor: _primary.withValues(alpha: 0.3),
+                        disabledBackgroundColor: _primary.withOpacity(0.3),
                         disabledForegroundColor: Colors.white38,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -673,14 +673,14 @@ class _RencanaProduksiScreenState extends State<RencanaProduksiScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                _primary.withValues(alpha: 0.15),
-                _primary.withValues(alpha: 0.05),
+                _primary.withOpacity(0.15),
+                _primary.withOpacity(0.05),
               ],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(_radiusSm),
-            border: Border.all(color: _primary.withValues(alpha: 0.2)),
+            border: Border.all(color: _primary.withOpacity(0.2)),
           ),
           child: Row(
             children: [
@@ -688,7 +688,7 @@ class _RencanaProduksiScreenState extends State<RencanaProduksiScreen> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: _primary.withValues(alpha: 0.2),
+                  color: _primary.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Icon(TablerIcons.report_money, size: 14, color: _primary),
@@ -747,9 +747,9 @@ class _RencanaProduksiScreenState extends State<RencanaProduksiScreen> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _bg.withValues(alpha: 0.3),
+                color: _bg.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(_radiusSm),
-                border: Border.all(color: _border.withValues(alpha: 0.5)),
+                border: Border.all(color: _border.withOpacity(0.5)),
               ),
               child: Row(
                 children: [
@@ -757,7 +757,7 @@ class _RencanaProduksiScreenState extends State<RencanaProduksiScreen> {
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
-                      color: _primary.withValues(alpha: 0.1),
+                      color: _primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     alignment: Alignment.center,
@@ -829,7 +829,7 @@ class _RencanaProduksiScreenState extends State<RencanaProduksiScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: _success,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: _success.withValues(alpha: 0.3),
+          disabledBackgroundColor: _success.withOpacity(0.3),
           disabledForegroundColor: Colors.white38,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
@@ -855,12 +855,12 @@ class _RencanaProduksiScreenState extends State<RencanaProduksiScreen> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(_radiusSm),
               child: DataTable(
-                headingRowColor: WidgetStateProperty.all(_primary.withValues(alpha: 0.1)),
+                headingRowColor: WidgetStateProperty.all(_primary.withOpacity(0.1)),
                 dataRowMinHeight: 36,
                 dataRowMaxHeight: 48,
                 columnSpacing: 20,
                 border: TableBorder.symmetric(
-                  inside: BorderSide(color: _border.withValues(alpha: 0.4), width: 0.5),
+                  inside: BorderSide(color: _border.withOpacity(0.4), width: 0.5),
                 ),
                 columns: [
                   const DataColumn(label: Text('Nama Bahan', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: _textPrimary))),
@@ -962,10 +962,10 @@ class _SelectAllRow extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: allSelected ? _primary.withValues(alpha: 0.08) : Colors.transparent,
+              color: allSelected ? _primary.withOpacity(0.08) : Colors.transparent,
               borderRadius: BorderRadius.circular(_radiusSm),
               border: Border.all(
-                color: allSelected ? _primary.withValues(alpha: 0.3) : _border,
+                color: allSelected ? _primary.withOpacity(0.3) : _border,
               ),
             ),
             child: Row(
@@ -1030,10 +1030,10 @@ class _PlanCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: selected ? _primary.withValues(alpha: 0.08) : _cardBg,
+              color: selected ? _primary.withOpacity(0.08) : _cardBg,
               borderRadius: BorderRadius.circular(_radiusSm),
               border: Border.all(
-                color: selected ? _primary.withValues(alpha: 0.5) : _border,
+                color: selected ? _primary.withOpacity(0.5) : _border,
                 width: selected ? 1.5 : 1,
               ),
             ),
@@ -1184,7 +1184,7 @@ class _EmptyState extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: _border.withValues(alpha: 0.5),
+              color: _border.withOpacity(0.5),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, size: 22, color: _textHint),
@@ -1220,9 +1220,9 @@ class _ErrorBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _danger.withValues(alpha: 0.08),
+        color: _danger.withOpacity(0.08),
         borderRadius: BorderRadius.circular(_radiusSm),
-        border: Border.all(color: _danger.withValues(alpha: 0.2)),
+        border: Border.all(color: _danger.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -1230,7 +1230,7 @@ class _ErrorBanner extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: _danger.withValues(alpha: 0.15),
+              color: _danger.withOpacity(0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: const Icon(TablerIcons.alert_circle, color: _danger, size: 15),
@@ -1251,7 +1251,7 @@ class _ErrorBanner extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   message,
-                  style: TextStyle(fontSize: 10, color: _danger.withValues(alpha: 0.8)),
+                  style: TextStyle(fontSize: 10, color: _danger.withOpacity(0.8)),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1261,7 +1261,7 @@ class _ErrorBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Container(
             decoration: BoxDecoration(
-              border: Border.all(color: _danger.withValues(alpha: 0.3)),
+              border: Border.all(color: _danger.withOpacity(0.3)),
               borderRadius: BorderRadius.circular(6),
             ),
             child: TextButton(

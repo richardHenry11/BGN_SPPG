@@ -11,10 +11,6 @@ class AuthService {
       '/api/auth/login',
       body: {'email': email, 'password': password},
     );
-    final data = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode != 200) {
-      throw Exception(data['message'] as String? ?? 'Email atau password salah');
-    }
-    return data;
+    return jsonDecode(res.body) as Map<String, dynamic>;
   }
 }

@@ -30,7 +30,7 @@ class RiwayatCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: BGNColors.white,
+        color: BGNColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: BGNColors.border),
       ),
@@ -145,7 +145,7 @@ class RiwayatCard extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.network(fotoUrl, height: 144, width: double.infinity,
-                    fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                    fit: BoxFit.cover, cacheWidth: 288, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
               ),
             ),
           ],

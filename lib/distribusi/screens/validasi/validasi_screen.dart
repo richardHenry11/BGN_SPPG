@@ -47,6 +47,7 @@ class _ValidasiScreenState extends State<ValidasiScreen> {
       _scanSelesai = false;
     });
     await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
     setState(() {
       _isScanning = false;
       _scanSelesai = true;
@@ -87,7 +88,7 @@ class _ValidasiScreenState extends State<ValidasiScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: BGNColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: BGNColors.border),
             ),
@@ -201,7 +202,7 @@ class _ValidasiScreenState extends State<ValidasiScreen> {
             // Kamera area
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: BGNColors.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: BGNColors.border),
               ),
@@ -289,7 +290,7 @@ class _ValidasiScreenState extends State<ValidasiScreen> {
                                     width: 6,
                                     height: 6,
                                     decoration: const BoxDecoration(
-                                      color: Colors.white,
+                                      color: BGNColors.surface,
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -404,7 +405,7 @@ class _HasilValidasi extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: BGNColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: BGNColors.border),
       ),

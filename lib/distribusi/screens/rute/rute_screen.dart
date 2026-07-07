@@ -68,8 +68,10 @@ class _RuteScreenState extends State<RuteScreen> {
   ];
 
   Future<void> _generateRute() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
     setState(() {
       _isLoading = false;
       _isGenerated = true;
@@ -142,7 +144,7 @@ class _RuteScreenState extends State<RuteScreen> {
                           decoration: BoxDecoration(
                             color: isStart
                                 ? BGNColors.primary
-                                : Colors.white,
+                                : BGNColors.surface,
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: BGNColors.primary,
@@ -183,7 +185,7 @@ class _RuteScreenState extends State<RuteScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: BGNColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: BGNColors.border),
             ),
@@ -299,16 +301,16 @@ class _RuteScreenState extends State<RuteScreen> {
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: BGNColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Urutan rute optimal',
+            decoration: BoxDecoration(
+              color: BGNColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: BGNColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Urutan rute optimal',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,

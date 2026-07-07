@@ -508,7 +508,7 @@ class _SupplierProductsPageState extends State<SupplierProductsPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.inventory_2_rounded, color: Colors.white, size: 28),
@@ -675,7 +675,7 @@ class _SupplierProductsPageState extends State<SupplierProductsPage> {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: color, size: 16),

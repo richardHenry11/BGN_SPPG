@@ -30,7 +30,7 @@ class DriverChips extends StatelessWidget {
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: active ? BGNColors.primary : BGNColors.white,
+                  color: active ? BGNColors.primary : BGNColors.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: active ? BGNColors.primary : BGNColors.border,

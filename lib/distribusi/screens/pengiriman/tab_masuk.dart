@@ -48,7 +48,7 @@ class _TabMasukState extends State<TabMasuk> {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? BGNColors.primaryLight
-                      : BGNColors.white,
+                      : BGNColors.surface,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected
@@ -185,7 +185,7 @@ class _FormValidasiMasukState extends State<_FormValidasiMasuk> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: BGNColors.white,
+        color: BGNColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: BGNColors.border),
       ),
@@ -213,7 +213,7 @@ class _FormValidasiMasukState extends State<_FormValidasiMasuk> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: BGNColors.white.withOpacity(0.6),
+                        color: BGNColors.surface.withOpacity(0.6),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(pengiriman.waktu,
@@ -350,7 +350,7 @@ class _FormValidasiMasukState extends State<_FormValidasiMasuk> {
                     decoration: BoxDecoration(
                       color: isActive
                           ? BGNColors.primaryLight
-                          : BGNColors.white,
+                          : BGNColors.surface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isActive
@@ -476,7 +476,7 @@ class _MiniStat extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: BGNColors.white,
+          color: BGNColors.surface,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(

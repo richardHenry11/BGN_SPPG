@@ -338,7 +338,7 @@ class _ProfileSupplierPageState extends State<ProfileSupplierPage> {
               height: 160,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.04),
+                color: Colors.white.withOpacity(0.04),
               ),
             ),
           ),
@@ -350,7 +350,7 @@ class _ProfileSupplierPageState extends State<ProfileSupplierPage> {
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.04),
+                color: Colors.white.withOpacity(0.04),
               ),
             ),
           ),
@@ -367,7 +367,7 @@ class _ProfileSupplierPageState extends State<ProfileSupplierPage> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
+                        color: Colors.white.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22),
@@ -377,7 +377,7 @@ class _ProfileSupplierPageState extends State<ProfileSupplierPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
+                      color: Colors.white.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Row(
@@ -409,7 +409,7 @@ class _ProfileSupplierPageState extends State<ProfileSupplierPage> {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 3),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4)),
+                        BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
                       ],
                     ),
                     child: CircleAvatar(
@@ -434,7 +434,7 @@ class _ProfileSupplierPageState extends State<ProfileSupplierPage> {
                           const SizedBox(height: 4),
                           Text(
                             _supplier?['phone'] as String? ?? '',
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
+                            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
                           ),
                         ],
                       ),
@@ -466,7 +466,7 @@ class _ProfileSupplierPageState extends State<ProfileSupplierPage> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color.fromARGB(255, 60, 60, 60)),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6)),
+            BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 6)),
           ],
         ),
         child: Row(
@@ -516,9 +516,9 @@ class _ProfileSupplierPageState extends State<ProfileSupplierPage> {
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 40, 40, 40).withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
